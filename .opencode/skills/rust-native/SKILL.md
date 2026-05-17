@@ -1,3 +1,8 @@
+---
+name: rust-native
+description: Rust native module development for ProCode — NAPI-RS bindings, doc comments, error handling, and SAFETY comments
+---
+
 # Skill: Rust Native Module Development
 
 ## When to Use

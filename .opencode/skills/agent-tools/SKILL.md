@@ -1,3 +1,8 @@
+---
+name: agent-tools
+description: Agent tool discipline for ProCode — ReadFile, SearchCode, GraphQuery, WriteFile, RunTerminal with completion checklist
+---
+
 # Skill: Agent Tool Use
 
 ## When to Use

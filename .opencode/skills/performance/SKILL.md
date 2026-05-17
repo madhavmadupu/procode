@@ -1,3 +1,8 @@
+---
+name: performance
+description: Performance-sensitive code for ProCode — hot path rules, performance budgets, and measurement strategy
+---
+
 # Skill: Performance-Sensitive Code
 
 ## When to Use

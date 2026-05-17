@@ -1,3 +1,8 @@
+---
+name: knowledge-graph
+description: Query the ProCode knowledge graph for code relationships, dependencies, and impact analysis before making changes
+---
+
 # Skill: Knowledge Graph Queries
 
 ## When to Use

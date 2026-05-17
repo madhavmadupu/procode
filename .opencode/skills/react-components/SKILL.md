@@ -1,3 +1,8 @@
+---
+name: react-components
+description: React component architecture for ProCode — thin components, custom hooks, compound patterns, and state handling
+---
+
 # Skill: React Component Architecture
 
 ## When to Use

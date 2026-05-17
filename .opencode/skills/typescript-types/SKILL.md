@@ -1,3 +1,8 @@
+---
+name: typescript-types
+description: TypeScript type design for ProCode — domain modeling, discriminated unions, branded types, and satisfies patterns
+---
+
 # Skill: TypeScript Type Design
 
 ## When to Use

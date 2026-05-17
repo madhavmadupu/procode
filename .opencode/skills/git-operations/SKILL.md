@@ -1,3 +1,8 @@
+---
+name: git-operations
+description: Git operations for ProCode — conventional commits, atomic changes, diff-before-commit, and branch conventions
+---
+
 # Skill: Git Operations
 
 ## When to Use

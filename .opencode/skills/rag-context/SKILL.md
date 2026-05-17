@@ -1,3 +1,8 @@
+---
+name: rag-context
+description: Use RAG-retrieved context chunks effectively — reuse existing patterns, trust codebase over training data
+---
+
 # Skill: RAG Context Usage
 
 ## When to Use

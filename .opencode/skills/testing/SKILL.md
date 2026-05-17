@@ -1,3 +1,8 @@
+---
+name: testing
+description: Testing standards for ProCode — unit/integration/E2E pyramid, coverage thresholds, and test organization
+---
+
 # Skill: Writing Tests
 
 ## When to Use

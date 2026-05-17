@@ -1,3 +1,8 @@
+---
+name: multi-agent
+description: Multi-agent coordination for ProCode — handoff format, agent boundaries, blocked status, and role definitions
+---
+
 # Skill: Multi-Agent Coordination
 
 ## When to Use

@@ -1,3 +1,8 @@
+---
+name: error-handling
+description: Error handling and observability for ProCode — typed errors, contextual logging, Result pattern in TS and Rust
+---
+
 # Skill: Error Handling & Observability
 
 ## When to Use
