@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useWorkspaceStore } from "./stores/workspace";
 import { useFileTreeStore } from "./stores/file-tree";
 import { useTabsStore } from "./stores/tabs";
@@ -10,7 +10,6 @@ import { FileTree } from "./components/sidebar/FileTree";
 import { SourceControl } from "./components/sidebar/SourceControl";
 import { Timeline } from "./components/sidebar/Timeline";
 import { AgentPanel } from "./components/sidebar/AgentPanel";
-import { ExtensionPanel } from "./components/sidebar/ExtensionPanel";
 import { TabBar } from "./components/editor/TabBar";
 import { EditorPanel } from "./components/editor/EditorPanel";
 import { StatusBar } from "./components/shared/StatusBar";
@@ -21,7 +20,11 @@ import { OpenFolderDialog } from "./components/shared/OpenFolderDialog";
 import { ProblemPanel } from "./components/shared/ProblemPanel";
 import { DebugPanel } from "./components/shared/DebugPanel";
 import { TerminalPanel } from "./components/shared/TerminalPanel";
+import { ErrorBoundary } from "./components/shared/ErrorBoundary";
+import { NotificationToast } from "./components/shared/NotificationToast";
 import { FolderIcon, SourceControlIcon, ClockIcon, SparkleIcon, BugIcon, AlertIcon, TerminalIcon, ExtensionsIcon } from "./components/shared/icons";
+
+const ExtensionPanel = lazy(() => import("./components/sidebar/ExtensionPanel"));
 
 type SidebarPanel = "explorer" | "source-control" | "timeline" | "agent" | "debug" | "problems" | "extensions";
 type BottomPanel = "none" | "terminal";
@@ -53,7 +56,8 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-zinc-950 text-zinc-100">
+    <ErrorBoundary>
+      <div className="h-screen w-screen flex flex-col bg-zinc-950 text-zinc-100">
       <header className="h-8 flex items-center px-4 border-b border-zinc-800 bg-zinc-900 select-none">
         <span className="text-sm font-medium">ProCode</span>
         {rootPath && (
@@ -66,7 +70,7 @@ function App() {
       <main className="flex-1 flex overflow-hidden">
         {/* Activity Bar */}
         {isSidebarOpen && rootPath && (
-          <div className="w-12 border-r border-zinc-800 bg-zinc-900 flex flex-col items-center py-2 gap-1">
+          <div className="w-12 border-r border-zinc-800 bg-zinc-900 flex flex-col items-center py-2 gap-1" role="navigation" aria-label="Activity Bar">
             <button
               onClick={() => setActivePanel("explorer")}
               className={`p-2 rounded transition-colors ${
@@ -75,6 +79,8 @@ function App() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
               title="Explorer"
+              aria-label="Explorer"
+              aria-pressed={activePanel === "explorer"}
             >
               <FolderIcon className="w-5 h-5" />
             </button>
@@ -86,6 +92,8 @@ function App() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
               title="Source Control"
+              aria-label="Source Control"
+              aria-pressed={activePanel === "source-control"}
             >
               <SourceControlIcon className="w-5 h-5" />
             </button>
@@ -97,6 +105,8 @@ function App() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
               title="Run & Debug"
+              aria-label="Run and Debug"
+              aria-pressed={activePanel === "debug"}
             >
               <BugIcon className="w-5 h-5" />
             </button>
@@ -108,6 +118,8 @@ function App() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
               title="Problems"
+              aria-label="Problems"
+              aria-pressed={activePanel === "problems"}
             >
               <AlertIcon className="w-5 h-5" />
             </button>
@@ -119,6 +131,8 @@ function App() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
               title="Timeline"
+              aria-label="Timeline"
+              aria-pressed={activePanel === "timeline"}
             >
               <ClockIcon className="w-5 h-5" />
             </button>
@@ -130,6 +144,8 @@ function App() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
               title="AI Agent"
+              aria-label="AI Agent"
+              aria-pressed={activePanel === "agent"}
             >
               <SparkleIcon className="w-5 h-5" />
             </button>
@@ -142,6 +158,8 @@ function App() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
               title="Terminal"
+              aria-label="Terminal"
+              aria-pressed={bottomPanel === "terminal"}
             >
               <TerminalIcon className="w-5 h-5" />
             </button>
@@ -153,6 +171,8 @@ function App() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
               title="Extensions"
+              aria-label="Extensions"
+              aria-pressed={activePanel === "extensions"}
             >
               <ExtensionsIcon className="w-5 h-5" />
             </button>
@@ -161,7 +181,7 @@ function App() {
 
         {/* Sidebar Panel */}
         {isSidebarOpen && rootPath && (
-          <aside className="w-64 border-r border-zinc-800 bg-zinc-900 overflow-y-auto">
+          <aside className="w-64 border-r border-zinc-800 bg-zinc-900 overflow-y-auto" role="complementary" aria-label="Sidebar Panel">
             {activePanel === "explorer" && <FileTree />}
             {activePanel === "source-control" && <SourceControl />}
             {activePanel === "timeline" && <Timeline />}
@@ -189,7 +209,11 @@ function App() {
                 }}
               />
             )}
-            {activePanel === "extensions" && <ExtensionPanel />}
+            {activePanel === "extensions" && (
+              <Suspense fallback={<div className="p-4 text-zinc-500 text-sm">Loading extensions...</div>}>
+                <ExtensionPanel />
+              </Suspense>
+            )}
           </aside>
         )}
 
@@ -232,7 +256,9 @@ function App() {
       )}
 
       <CommandPalette />
+      <NotificationToast />
     </div>
+    </ErrorBoundary>
   );
 }
 
