@@ -17,7 +17,7 @@ const DEFAULT_EDITOR_CONFIG: EditorConfig = {
   wordWrap: "off",
   minimap: { enabled: true },
   fontSize: 14,
-  fontFamily: "JetBrains Mono, monospace",
+  fontFamily: "'Geist Mono', 'Cascadia Code', monospace",
   theme: "dark",
 };
 

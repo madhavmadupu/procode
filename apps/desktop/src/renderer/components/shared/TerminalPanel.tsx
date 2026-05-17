@@ -20,7 +20,7 @@ export function TerminalPanel() {
     const term = new Terminal({
       cursorBlink: true,
       fontSize: 14,
-      fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
+      fontFamily: "'Geist Mono', 'Cascadia Code', 'Consolas', monospace",
       theme: {
         background: "#18181b",
         foreground: "#e4e4e7",
