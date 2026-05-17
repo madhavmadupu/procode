@@ -18,35 +18,323 @@
   font-display: swap;
 }
 
-:root {
-  font-family: "JetBrains Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer base {
+  :root {
+    font-family: "JetBrains Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+    /* shadcn/ui semantic tokens - Dark (default) */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
 
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+
+    --radius: 0.5rem;
+
+    /* ProCode IDE-specific tokens */
+    --sidebar: 240 5.9% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+
+    --editor: 240 10% 3.9%;
+    --editor-foreground: 0 0% 98%;
+    --editor-line-highlight: 240 3.7% 15.9%;
+    --editor-selection: 212 72% 48% / 0.3;
+
+    --status-bar: 212 72% 48%;
+    --status-bar-foreground: 0 0% 100%;
+
+    --title-bar: 240 5.9% 10%;
+    --title-bar-foreground: 0 0% 98%;
+
+    --activity-bar: 240 5.9% 10%;
+    --activity-bar-foreground: 240 5% 64.9%;
+    --activity-bar-foreground-active: 0 0% 98%;
+
+    --tab-active: 240 10% 3.9%;
+    --tab-inactive: 240 5.9% 10%;
+    --tab-border: 240 3.7% 15.9%;
+
+    --scrollbar-thumb: 240 3.7% 25.9%;
+    --scrollbar-track: transparent;
+
+    /* ProCode z-index scale */
+    --z-editor: 1;
+    --z-sidebar: 10;
+    --z-activity-bar: 10;
+    --z-status-bar: 10;
+    --z-tab-bar: 15;
+    --z-breadcrumb: 15;
+    --z-panel-header: 20;
+    --z-dropdown: 30;
+    --z-tooltip: 40;
+    --z-modal: 50;
+    --z-toast: 100;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+
+    /* ProCode IDE-specific tokens - Light */
+    --sidebar: 240 4.8% 95.9%;
+    --sidebar-foreground: 240 10% 3.9%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-accent: 240 4.8% 90.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --editor: 0 0% 100%;
+    --editor-foreground: 240 10% 3.9%;
+    --editor-line-highlight: 240 4.8% 95.9%;
+    --editor-selection: 212 72% 48% / 0.2;
+
+    --status-bar: 212 72% 48%;
+    --status-bar-foreground: 0 0% 100%;
+
+    --title-bar: 240 4.8% 95.9%;
+    --title-bar-foreground: 240 10% 3.9%;
+
+    --activity-bar: 240 4.8% 95.9%;
+    --activity-bar-foreground: 240 3.8% 46.1%;
+    --activity-bar-foreground-active: 240 10% 3.9%;
+
+    --tab-active: 0 0% 100%;
+    --tab-inactive: 240 4.8% 95.9%;
+    --tab-border: 240 5.9% 90%;
+
+    --scrollbar-thumb: 240 4.8% 80.9%;
+    --scrollbar-track: transparent;
+  }
+
+  .high-contrast-dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 80%;
+
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 100%;
+
+    /* ProCode IDE-specific tokens - High Contrast Dark */
+    --sidebar: 0 0% 5%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 100%;
+    --sidebar-accent: 0 0% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+
+    --editor: 0 0% 0%;
+    --editor-foreground: 0 0% 100%;
+    --editor-line-highlight: 0 0% 15%;
+    --editor-selection: 212 72% 48% / 0.4;
+
+    --status-bar: 212 72% 48%;
+    --status-bar-foreground: 0 0% 100%;
+
+    --title-bar: 0 0% 5%;
+    --title-bar-foreground: 0 0% 100%;
+
+    --activity-bar: 0 0% 5%;
+    --activity-bar-foreground: 0 0% 80%;
+    --activity-bar-foreground-active: 0 0% 100%;
+
+    --tab-active: 0 0% 0%;
+    --tab-inactive: 0 0% 5%;
+    --tab-border: 0 0% 100%;
+
+    --scrollbar-thumb: 0 0% 50%;
+    --scrollbar-track: transparent;
+  }
+
+  .high-contrast-light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 70% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
+
+    /* ProCode IDE-specific tokens - High Contrast Light */
+    --sidebar: 0 0% 95%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 0%;
+    --sidebar-accent: 0 0% 85%;
+    --sidebar-accent-foreground: 0 0% 0%;
+
+    --editor: 0 0% 100%;
+    --editor-foreground: 0 0% 0%;
+    --editor-line-highlight: 0 0% 90%;
+    --editor-selection: 212 72% 48% / 0.25;
+
+    --status-bar: 212 72% 48%;
+    --status-bar-foreground: 0 0% 100%;
+
+    --title-bar: 0 0% 95%;
+    --title-bar-foreground: 0 0% 0%;
+
+    --activity-bar: 0 0% 95%;
+    --activity-bar-foreground: 0 0% 40%;
+    --activity-bar-foreground-active: 0 0% 0%;
+
+    --tab-active: 0 0% 100%;
+    --tab-inactive: 0 0% 95%;
+    --tab-border: 0 0% 0%;
+
+    --scrollbar-thumb: 0 0% 50%;
+    --scrollbar-track: transparent;
   }
 }
 
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+  }
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+@layer utilities {
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+
+  /* Prefers reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Custom scrollbar for IDE */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--scrollbar-thumb));
+    border-radius: 5px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
 }
