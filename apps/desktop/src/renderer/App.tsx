@@ -3,29 +3,36 @@ import { useWorkspaceStore } from "./stores/workspace";
 import { useFileTreeStore } from "./stores/file-tree";
 import { useTabsStore } from "./stores/tabs";
 import { useEditorStore } from "./stores/editor";
+import { useFirstRunStore } from "./stores/first-run";
 import { FileTree } from "./components/sidebar/FileTree";
 import { TabBar } from "./components/editor/TabBar";
 import { EditorPanel } from "./components/editor/EditorPanel";
 import { StatusBar } from "./components/shared/StatusBar";
 import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import { CommandPalette } from "./components/shared/CommandPalette";
+import { FirstRunWizard } from "./components/shared/FirstRunWizard";
 import { OpenFolderDialog } from "./components/shared/OpenFolderDialog";
 
 function App() {
   const { rootPath, setWorkspace, state } = useWorkspaceStore();
   const { isSidebarOpen } = useEditorStore();
+  const { hasCompletedOnboarding } = useFirstRunStore();
   const [showOpenDialog, setShowOpenDialog] = useState(!rootPath);
 
   useEffect(() => {
-    if (!rootPath) {
+    if (!rootPath && hasCompletedOnboarding) {
       setShowOpenDialog(true);
     }
-  }, [rootPath]);
+  }, [rootPath, hasCompletedOnboarding]);
 
   const handleOpenFolder = async (folderPath: string) => {
     setWorkspace(folderPath);
     setShowOpenDialog(false);
   };
+
+  if (!hasCompletedOnboarding) {
+    return <FirstRunWizard />;
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col bg-zinc-950 text-zinc-100">
