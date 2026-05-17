@@ -4,6 +4,8 @@ import { useFileTreeStore } from "./stores/file-tree";
 import { useTabsStore } from "./stores/tabs";
 import { useEditorStore } from "./stores/editor";
 import { useFirstRunStore } from "./stores/first-run";
+import { useLspStore } from "./stores/lsp.store";
+import { useDapStore } from "./stores/dap.store";
 import { FileTree } from "./components/sidebar/FileTree";
 import { SourceControl } from "./components/sidebar/SourceControl";
 import { Timeline } from "./components/sidebar/Timeline";
@@ -15,9 +17,11 @@ import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import { CommandPalette } from "./components/shared/CommandPalette";
 import { FirstRunWizard } from "./components/shared/FirstRunWizard";
 import { OpenFolderDialog } from "./components/shared/OpenFolderDialog";
-import { FolderIcon, SourceControlIcon, ClockIcon, SparkleIcon } from "./components/shared/icons";
+import { ProblemPanel } from "./components/shared/ProblemPanel";
+import { DebugPanel } from "./components/shared/DebugPanel";
+import { FolderIcon, SourceControlIcon, ClockIcon, SparkleIcon, BugIcon, AlertIcon } from "./components/shared/icons";
 
-type SidebarPanel = "explorer" | "source-control" | "timeline" | "agent";
+type SidebarPanel = "explorer" | "source-control" | "timeline" | "agent" | "debug" | "problems";
 
 function App() {
   const { rootPath, setWorkspace, state } = useWorkspaceStore();
@@ -25,6 +29,9 @@ function App() {
   const { hasCompletedOnboarding } = useFirstRunStore();
   const [showOpenDialog, setShowOpenDialog] = useState(!rootPath);
   const [activePanel, setActivePanel] = useState<SidebarPanel>("explorer");
+
+  const lspStore = useLspStore();
+  const dapStore = useDapStore();
 
   useEffect(() => {
     if (!rootPath && hasCompletedOnboarding) {
@@ -79,6 +86,28 @@ function App() {
               <SourceControlIcon className="w-5 h-5" />
             </button>
             <button
+              onClick={() => setActivePanel("debug")}
+              className={`p-2 rounded transition-colors ${
+                activePanel === "debug"
+                  ? "text-zinc-100 bg-zinc-800"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+              title="Run & Debug"
+            >
+              <BugIcon className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setActivePanel("problems")}
+              className={`p-2 rounded transition-colors ${
+                activePanel === "problems"
+                  ? "text-zinc-100 bg-zinc-800"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+              title="Problems"
+            >
+              <AlertIcon className="w-5 h-5" />
+            </button>
+            <button
               onClick={() => setActivePanel("timeline")}
               className={`p-2 rounded transition-colors ${
                 activePanel === "timeline"
@@ -110,6 +139,29 @@ function App() {
             {activePanel === "source-control" && <SourceControl />}
             {activePanel === "timeline" && <Timeline />}
             {activePanel === "agent" && <AgentPanel />}
+            {activePanel === "debug" && (
+              <DebugPanel
+                onBreakpointToggle={(path, line) => {
+                  const existing = dapStore.breakpoints.get(path) ?? [];
+                  const exists = existing.some(bp => bp.line === line);
+                  if (exists) {
+                    const filtered = existing.filter(bp => bp.line !== line);
+                    dapStore.setBreakpoints(path, filtered);
+                  } else {
+                    dapStore.setBreakpoints(path, [...existing, { line, verified: false }]);
+                  }
+                }}
+                breakpoints={dapStore.breakpoints}
+              />
+            )}
+            {activePanel === "problems" && (
+              <ProblemPanel
+                diagnostics={lspStore.diagnostics}
+                onDiagnosticClick={(diagnostic) => {
+                  console.log("Diagnostic clicked:", diagnostic);
+                }}
+              />
+            )}
           </aside>
         )}
 

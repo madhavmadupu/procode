@@ -250,3 +250,129 @@ export function XCircleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function PlayIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <polygon points="5,3 19,12 5,21" />
+    </svg>
+  );
+}
+
+export function PauseIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <rect x="6" y="4" width="4" height="16" />
+      <rect x="14" y="4" width="4" height="16" />
+    </svg>
+  );
+}
+
+export function StepOverIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M10 4v16" />
+      <polygon points="14,4 22,12 14,20" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function StepIntoIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M10 4v16" />
+      <polygon points="14,4 22,12 14,20" fill="currentColor" stroke="none" />
+      <path d="M10 20l4 0" />
+    </svg>
+  );
+}
+
+export function StepOutIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M10 4v16" />
+      <polygon points="14,4 22,12 14,20" fill="currentColor" stroke="none" />
+      <path d="M10 4l4 0" />
+    </svg>
+  );
+}
+
+export function RestartIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <polyline points="23,4 23,10 17,10" />
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+    </svg>
+  );
+}
+
+export function BugIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <rect x="8" y="6" width="8" height="14" rx="4" />
+      <path d="M19 12h2" />
+      <path d="M3 12h2" />
+      <path d="M19 8h2" />
+      <path d="M3 8h2" />
+      <path d="M19 16h2" />
+      <path d="M3 16h2" />
+      <path d="M12 6V2" />
+      <path d="M8 4l2 2" />
+      <path d="M16 4l-2 2" />
+    </svg>
+  );
+}
+
+export function AlertIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}

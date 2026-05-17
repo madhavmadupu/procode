@@ -3,6 +3,7 @@ import * as monaco from "monaco-editor";
 import { useTabsStore } from "../../stores/tabs";
 import { useEditorStore } from "../../stores/editor";
 import { useWorkspaceStore } from "../../stores/workspace";
+import { useLspIntegration } from "../../hooks/useLspIntegration";
 
 export function EditorPanel() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -13,6 +14,9 @@ export function EditorPanel() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
+
+  // Integrate LSP with Monaco editor
+  useLspIntegration(monacoRef.current);
 
   useEffect(() => {
     if (!editorRef.current || isInitialized) return;
