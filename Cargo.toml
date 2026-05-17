@@ -1,0 +1,17 @@
+[workspace]
+members = [
+    "native/procode-native",
+    "native/procode-graph",
+    "native/procode-vector",
+    "native/procode-git",
+]
+resolver = "2"
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

@@ -1,0 +1,18 @@
+[package]
+name = "procode-native"
+version = "0.1.0"
+edition = "2021"
+description = "NAPI-RS bindings for ProCode IDE"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", features = ["async"] }
+napi-derive = "2"
+procode-graph = { path = "../procode-graph" }
+procode-vector = { path = "../procode-vector" }
+procode-git = { path = "../procode-git" }
+
+[build-dependencies]
+napi-build = "2"

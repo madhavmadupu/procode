@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.node
+target/
+coverage/
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
+*.tgz
+out/
+.turbo/
+*.tsbuildinfo

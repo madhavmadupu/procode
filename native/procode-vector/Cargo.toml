@@ -1,0 +1,8 @@
+[package]
+name = "procode-vector"
+version = "0.1.0"
+edition = "2021"
+description = "HNSW vector index for semantic search"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }

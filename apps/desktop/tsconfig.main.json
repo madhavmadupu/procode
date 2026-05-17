@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist/main",
+    "rootDir": "./src/main",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["electron-vite/node"]
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": ["src/main"],
+  "references": [
+    { "path": "../../packages/types" },
+    { "path": "../../packages/utils" },
+    { "path": "../../packages/editor-core" },
+    { "path": "../../packages/git-engine" },
+    { "path": "../../packages/lsp-host" },
+    { "path": "../../packages/knowledge-graph" },
+    { "path": "../../packages/rag-pipeline" },
+    { "path": "../../packages/agent-orchestration" },
+    { "path": "../../packages/llm-client" },
+    { "path": "../../packages/terminal" },
+    { "path": "../../packages/db" }
+  ]
+}

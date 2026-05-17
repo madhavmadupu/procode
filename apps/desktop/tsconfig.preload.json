@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist/preload",
+    "rootDir": "./src/main/preload"
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": ["src/main/preload"]
+}

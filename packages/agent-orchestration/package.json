@@ -1,0 +1,25 @@
+{
+  "name": "@procode/agent-orchestration",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@procode/types": "workspace:*",
+    "@procode/utils": "workspace:*",
+    "@procode/rag-pipeline": "workspace:*",
+    "@procode/knowledge-graph": "workspace:*",
+    "@procode/llm-client": "workspace:*",
+    "@procode/git-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

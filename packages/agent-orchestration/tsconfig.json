@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": ["src"],
+  "references": [
+    { "path": "../types" },
+    { "path": "../utils" },
+    { "path": "../rag-pipeline" },
+    { "path": "../knowledge-graph" },
+    { "path": "../llm-client" },
+    { "path": "../git-engine" }
+  ]
+}

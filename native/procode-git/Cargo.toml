@@ -1,0 +1,9 @@
+[package]
+name = "procode-git"
+version = "0.1.0"
+edition = "2021"
+description = "Fast git operations using libgit2"
+
+[dependencies]
+git2 = "0.19"
+serde = { version = "1", features = ["derive"] }
