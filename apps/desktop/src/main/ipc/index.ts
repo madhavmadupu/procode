@@ -5,6 +5,8 @@ import { gitRouter } from "./git-router.js";
 import { aiRouter } from "./ai-router.js";
 import { lspRouter } from "./lsp-router.js";
 import { dapRouter } from "./dap-router.js";
+import { terminalRouter } from "./terminal-router.js";
+import { extensionRouter } from "./extension-router.js";
 
 export const appRouter = router({
   fileSystem: fileSystemRouter,
@@ -13,6 +15,8 @@ export const appRouter = router({
   ai: aiRouter,
   lsp: lspRouter,
   dap: dapRouter,
+  terminal: terminalRouter,
+  extension: extensionRouter,
 });
 
 export type AppRouter = typeof appRouter;

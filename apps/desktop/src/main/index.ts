@@ -7,6 +7,8 @@ import { SettingsService } from "./services/settings.js";
 import { registerTrpcIpcHandlers } from "./ipc/ipc-bridge.js";
 import { LSPHost } from "@procode/lsp-host";
 import { DAPHost } from "@procode/dap-host";
+import { TerminalHost } from "@procode/terminal";
+import { ExtensionHost } from "@procode/extension-api";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -15,6 +17,8 @@ let fileSystemService: FileSystemService | null = null;
 let settingsService: SettingsService | null = null;
 let lspHost: LSPHost | null = null;
 let dapHost: DAPHost | null = null;
+let terminalHost: TerminalHost | null = null;
+let extensionHost: ExtensionHost | null = null;
 
 function onFileChange(change: FileChange) {
   mainWindow?.webContents.send("file-change", change);
@@ -58,8 +62,10 @@ async function initializeServices() {
   fileSystemService = new FileSystemService(onFileChange);
   lspHost = new LSPHost();
   dapHost = new DAPHost();
+  terminalHost = new TerminalHost();
+  extensionHost = new ExtensionHost();
 
-  registerTrpcIpcHandlers(fileSystemService, settingsService, lspHost, dapHost);
+  registerTrpcIpcHandlers(fileSystemService, settingsService, lspHost, dapHost, terminalHost, extensionHost);
 }
 
 app.whenReady().then(async () => {
@@ -78,6 +84,8 @@ app.on("window-all-closed", async () => {
   settingsService?.dispose();
   await lspHost?.stopAll();
   await dapHost?.stop();
+  terminalHost?.killAll();
+  extensionHost?.deactivateAll();
 
   if (process.platform !== "darwin") {
     app.quit();

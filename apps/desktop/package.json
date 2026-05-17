@@ -23,6 +23,7 @@
     "@procode/agent-orchestration": "workspace:*",
     "@procode/llm-client": "workspace:*",
     "@procode/terminal": "workspace:*",
+    "@procode/extension-api": "workspace:*",
     "@procode/db": "workspace:*",
     "electron-updater": "^6.3.0",
     "zustand": "^5.0.0",

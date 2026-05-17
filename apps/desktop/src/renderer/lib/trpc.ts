@@ -224,4 +224,34 @@ export const trpc = {
     evaluate: (input: { expression: string; frameId?: number }) =>
       trpcCall("dap", "evaluate", input, "mutation"),
   },
+  terminal: {
+    create: (input?: { name?: string; cwd?: string; shell?: string; rows?: number; cols?: number }) =>
+      trpcCall("terminal", "create", input ?? {}, "mutation"),
+    write: (input: { id: string; data: string }) =>
+      trpcCall("terminal", "write", input, "mutation"),
+    resize: (input: { id: string; rows: number; cols: number }) =>
+      trpcCall("terminal", "resize", input, "mutation"),
+    kill: (input: { id: string }) =>
+      trpcCall("terminal", "kill", input, "mutation"),
+    killAll: () =>
+      trpcCall("terminal", "killAll", {}, "mutation"),
+    list: () =>
+      trpcCall("terminal", "list", {}, "query"),
+    rename: (input: { id: string; name: string }) =>
+      trpcCall("terminal", "rename", input, "mutation"),
+  },
+  extension: {
+    list: () =>
+      trpcCall("extension", "list", {}, "query"),
+    activate: (input: { name: string }) =>
+      trpcCall("extension", "activate", input, "mutation"),
+    deactivate: (input: { name: string }) =>
+      trpcCall("extension", "deactivate", input, "mutation"),
+    getCommands: () =>
+      trpcCall("extension", "getCommands", {}, "query"),
+    executeCommand: (input: { id: string; args?: unknown[] }) =>
+      trpcCall("extension", "executeCommand", input, "mutation"),
+    registerExtension: (input: { manifest: { name: string; displayName: string; version: string; description?: string; main: string; activationEvents?: string[]; contributes?: { commands?: { command: string; title: string }[]; languages?: { id: string; extensions?: string[] }[] }; dependencies?: Record<string, string> }; extensionPath: string }) =>
+      trpcCall("extension", "registerExtension", input, "mutation"),
+  },
 };

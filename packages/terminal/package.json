@@ -12,9 +12,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@procode/types": "workspace:*"
+    "@procode/types": "workspace:*",
+    "node-pty": "^1.0.0"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "typescript": "^5.7.0"
   }
 }

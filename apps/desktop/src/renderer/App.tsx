@@ -10,6 +10,7 @@ import { FileTree } from "./components/sidebar/FileTree";
 import { SourceControl } from "./components/sidebar/SourceControl";
 import { Timeline } from "./components/sidebar/Timeline";
 import { AgentPanel } from "./components/sidebar/AgentPanel";
+import { ExtensionPanel } from "./components/sidebar/ExtensionPanel";
 import { TabBar } from "./components/editor/TabBar";
 import { EditorPanel } from "./components/editor/EditorPanel";
 import { StatusBar } from "./components/shared/StatusBar";
@@ -19,9 +20,11 @@ import { FirstRunWizard } from "./components/shared/FirstRunWizard";
 import { OpenFolderDialog } from "./components/shared/OpenFolderDialog";
 import { ProblemPanel } from "./components/shared/ProblemPanel";
 import { DebugPanel } from "./components/shared/DebugPanel";
-import { FolderIcon, SourceControlIcon, ClockIcon, SparkleIcon, BugIcon, AlertIcon } from "./components/shared/icons";
+import { TerminalPanel } from "./components/shared/TerminalPanel";
+import { FolderIcon, SourceControlIcon, ClockIcon, SparkleIcon, BugIcon, AlertIcon, TerminalIcon, ExtensionsIcon } from "./components/shared/icons";
 
-type SidebarPanel = "explorer" | "source-control" | "timeline" | "agent" | "debug" | "problems";
+type SidebarPanel = "explorer" | "source-control" | "timeline" | "agent" | "debug" | "problems" | "extensions";
+type BottomPanel = "none" | "terminal";
 
 function App() {
   const { rootPath, setWorkspace, state } = useWorkspaceStore();
@@ -29,6 +32,7 @@ function App() {
   const { hasCompletedOnboarding } = useFirstRunStore();
   const [showOpenDialog, setShowOpenDialog] = useState(!rootPath);
   const [activePanel, setActivePanel] = useState<SidebarPanel>("explorer");
+  const [bottomPanel, setBottomPanel] = useState<BottomPanel>("none");
 
   const lspStore = useLspStore();
   const dapStore = useDapStore();
@@ -129,6 +133,29 @@ function App() {
             >
               <SparkleIcon className="w-5 h-5" />
             </button>
+            <div className="flex-1" />
+            <button
+              onClick={() => setBottomPanel(bottomPanel === "terminal" ? "none" : "terminal")}
+              className={`p-2 rounded transition-colors ${
+                bottomPanel === "terminal"
+                  ? "text-zinc-100 bg-zinc-800"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+              title="Terminal"
+            >
+              <TerminalIcon className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setActivePanel("extensions")}
+              className={`p-2 rounded transition-colors ${
+                activePanel === "extensions"
+                  ? "text-zinc-100 bg-zinc-800"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+              title="Extensions"
+            >
+              <ExtensionsIcon className="w-5 h-5" />
+            </button>
           </div>
         )}
 
@@ -162,6 +189,7 @@ function App() {
                 }}
               />
             )}
+            {activePanel === "extensions" && <ExtensionPanel />}
           </aside>
         )}
 
@@ -170,8 +198,15 @@ function App() {
             <>
               <TabBar />
               <Breadcrumbs />
-              <div className="flex-1 overflow-hidden">
-                <EditorPanel />
+              <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-hidden">
+                  <EditorPanel />
+                </div>
+                {bottomPanel === "terminal" && (
+                  <div className="h-64 border-t border-zinc-800">
+                    <TerminalPanel />
+                  </div>
+                )}
               </div>
             </>
           ) : (

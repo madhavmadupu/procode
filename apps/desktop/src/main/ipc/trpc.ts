@@ -3,6 +3,8 @@ import type { FileSystemService } from "../services/file-system.js";
 import type { SettingsService } from "../services/settings.js";
 import type { LSPHost } from "@procode/lsp-host";
 import type { DAPHost } from "@procode/dap-host";
+import type { TerminalHost } from "@procode/terminal";
+import type { ExtensionHost } from "@procode/extension-api";
 
 export interface TrpcContext {
   fileSystem: FileSystemService;
@@ -10,6 +12,8 @@ export interface TrpcContext {
   workspaceRoot: string | null;
   lspHost: LSPHost | null;
   dapHost: DAPHost | null;
+  terminalHost: TerminalHost | null;
+  extensionHost: ExtensionHost | null;
 }
 
 const t = initTRPC.context<TrpcContext>().create();

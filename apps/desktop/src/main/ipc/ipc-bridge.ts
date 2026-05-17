@@ -4,6 +4,8 @@ import type { FileSystemService } from "../services/file-system.js";
 import type { SettingsService } from "../services/settings.js";
 import type { LSPHost } from "@procode/lsp-host";
 import type { DAPHost } from "@procode/dap-host";
+import type { TerminalHost } from "@procode/terminal";
+import type { ExtensionHost } from "@procode/extension-api";
 import { appRouter } from "./index.js";
 
 const TRPC_CHANNEL = "trpc-request";
@@ -28,6 +30,8 @@ export function registerTrpcIpcHandlers(
   settings: SettingsService,
   lspHost: LSPHost,
   dapHost: DAPHost,
+  terminalHost: TerminalHost,
+  extensionHost: ExtensionHost,
 ) {
   const ctx: TrpcContext = {
     fileSystem,
@@ -35,6 +39,8 @@ export function registerTrpcIpcHandlers(
     workspaceRoot: fileSystem.getWorkspaceRoot(),
     lspHost,
     dapHost,
+    terminalHost,
+    extensionHost,
   };
   const caller = appRouter.createCaller(ctx);
 
@@ -58,6 +64,10 @@ export function registerTrpcIpcHandlers(
         result = await (caller.lsp as any)[procedureName](request.input);
       } else if (routerName === "dap" && procedureName) {
         result = await (caller.dap as any)[procedureName](request.input);
+      } else if (routerName === "terminal" && procedureName) {
+        result = await (caller.terminal as any)[procedureName](request.input);
+      } else if (routerName === "extension" && procedureName) {
+        result = await (caller.extension as any)[procedureName](request.input);
       } else {
         throw new Error(`Unknown router: ${routerName}`);
       }
