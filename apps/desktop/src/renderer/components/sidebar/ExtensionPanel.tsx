@@ -7,13 +7,14 @@ import {
   Badge,
   Avatar,
   AvatarFallback,
-  AvatarImage,
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
+  Switch,
+  Separator,
 } from "../ui";
-import { SearchIcon, DownloadIcon, StarIcon } from "lucide-react";
+import { SearchIcon, FolderIcon, ArrowLeftIcon, TrashIcon, DownloadIcon, StarIcon } from "../shared/icons";
 
 interface MarketplaceExtension {
   name: string;
@@ -25,9 +26,10 @@ interface MarketplaceExtension {
   rating: number;
   icon?: string;
   installed: boolean;
+  enabled: boolean;
 }
 
-const MOCK_MARKETPLACE: MarketplaceExtension[] = [
+const MOCK_MARKETPLACE: Omit<MarketplaceExtension, "installed" | "enabled">[] = [
   {
     name: "procode-python",
     displayName: "Python",
@@ -36,7 +38,6 @@ const MOCK_MARKETPLACE: MarketplaceExtension[] = [
     publisher: "ProCode",
     downloads: 1250000,
     rating: 4.8,
-    installed: false,
   },
   {
     name: "procode-rust",
@@ -46,7 +47,6 @@ const MOCK_MARKETPLACE: MarketplaceExtension[] = [
     publisher: "ProCode",
     downloads: 890000,
     rating: 4.9,
-    installed: false,
   },
   {
     name: "procode-prettier",
@@ -56,53 +56,36 @@ const MOCK_MARKETPLACE: MarketplaceExtension[] = [
     publisher: "ProCode",
     downloads: 2100000,
     rating: 4.7,
-    installed: false,
-  },
-  {
-    name: "procode-eslint",
-    displayName: "ESLint",
-    version: "2.4.0",
-    description: "Integrates ESLint into ProCode",
-    publisher: "ProCode",
-    downloads: 1800000,
-    rating: 4.6,
-    installed: false,
-  },
-  {
-    name: "procode-gitlens",
-    displayName: "GitLens",
-    version: "14.0.0",
-    description: "Supercharge Git within ProCode with blame annotations and code lens",
-    publisher: "ProCode",
-    downloads: 3200000,
-    rating: 4.9,
-    installed: false,
-  },
-  {
-    name: "procode-docker",
-    displayName: "Docker",
-    version: "1.29.0",
-    description: "Build, manage, and deploy containerized applications",
-    publisher: "ProCode",
-    downloads: 1500000,
-    rating: 4.5,
-    installed: false,
   },
 ];
 
 export function ExtensionPanel() {
   const { extensions, loadExtensions, activateExtension, deactivateExtension } = useExtensionStore();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"marketplace" | "installed">("marketplace");
+  const [activeTab, setActiveTab] = useState<"marketplace" | "installed">("installed");
+  const [selectedExt, setSelectedExt] = useState<MarketplaceExtension | null>(null);
 
   useEffect(() => {
     loadExtensions();
   }, [loadExtensions]);
 
   const installedNames = new Set(extensions.map((e) => e.name));
+  const installedData = extensions.map(e => ({
+    name: e.name,
+    displayName: e.displayName || e.name,
+    version: e.version,
+    description: e.description || "",
+    publisher: "procode",
+    downloads: 0,
+    rating: 0,
+    installed: true,
+    enabled: e.isActive ?? true,
+  }));
+
   const marketplace = MOCK_MARKETPLACE.map((ext) => ({
     ...ext,
     installed: installedNames.has(ext.name),
+    enabled: true,
   }));
 
   const filteredMarket = marketplace.filter(
@@ -111,7 +94,29 @@ export function ExtensionPanel() {
       ext.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const installedExtensions = marketplace.filter((ext) => ext.installed);
+  const filteredInstalled = installedData.filter(
+    (ext) =>
+      ext.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ext.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleToggleEnabled = (name: string, enabled: boolean) => {
+    if (enabled) {
+      activateExtension(name);
+    } else {
+      deactivateExtension(name);
+    }
+  };
+
+  if (selectedExt) {
+    return (
+      <ExtensionDetail
+        ext={selectedExt}
+        onBack={() => setSelectedExt(null)}
+        onToggleEnabled={handleToggleEnabled}
+      />
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-sidebar">
@@ -121,7 +126,7 @@ export function ExtensionPanel() {
         <div className="relative">
           <SearchIcon className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
           <Input
-            placeholder="Search Marketplace..."
+            placeholder="Search extensions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 h-8 text-xs bg-sidebar-accent/50 border-border"
@@ -136,16 +141,35 @@ export function ExtensionPanel() {
       >
         <div className="px-3 py-1 border-b border-sidebar-border bg-sidebar">
           <TabsList className="grid w-full grid-cols-2 h-8 bg-sidebar-accent/50">
+            <TabsTrigger value="installed" className="text-[10px] h-6">
+              Installed ({installedData.length})
+            </TabsTrigger>
             <TabsTrigger value="marketplace" className="text-[10px] h-6">
               Marketplace
-            </TabsTrigger>
-            <TabsTrigger value="installed" className="text-[10px] h-6">
-              Installed ({extensions.length})
             </TabsTrigger>
           </TabsList>
         </div>
 
         <ScrollArea className="flex-1">
+          <TabsContent value="installed" className="m-0 p-0">
+            {filteredInstalled.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-xs">
+                No extensions installed
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {filteredInstalled.map((ext) => (
+                  <ExtensionItem
+                    key={ext.name}
+                    ext={ext}
+                    onClick={() => setSelectedExt(ext)}
+                    onToggleEnabled={(enabled) => handleToggleEnabled(ext.name, enabled)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="marketplace" className="m-0 p-0">
             {filteredMarket.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground text-xs italic">
@@ -157,31 +181,8 @@ export function ExtensionPanel() {
                   <ExtensionItem
                     key={ext.name}
                     ext={ext}
-                    isInstalled={installedNames.has(ext.name)}
-                    onAction={() =>
-                      ext.installed
-                        ? deactivateExtension(ext.name)
-                        : activateExtension(ext.name)
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="installed" className="m-0 p-0">
-            {installedExtensions.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-xs italic">
-                No extensions installed
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                {installedExtensions.map((ext) => (
-                  <ExtensionItem
-                    key={ext.name}
-                    ext={ext}
-                    isInstalled={true}
-                    onAction={() => deactivateExtension(ext.name)}
+                    onClick={() => setSelectedExt(ext)}
+                    onToggleEnabled={() => {}}
                   />
                 ))}
               </div>
@@ -193,14 +194,89 @@ export function ExtensionPanel() {
   );
 }
 
-function ExtensionItem({
+function ExtensionDetail({
   ext,
-  isInstalled,
-  onAction,
+  onBack,
+  onToggleEnabled,
 }: {
   ext: MarketplaceExtension;
-  isInstalled: boolean;
-  onAction: () => void;
+  onBack: () => void;
+  onToggleEnabled: (name: string, enabled: boolean) => void;
+}) {
+  return (
+    <div className="h-full flex flex-col bg-sidebar">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-sidebar-border">
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onBack}>
+          <ArrowLeftIcon className="w-4 h-4" />
+        </Button>
+        <span className="text-sm font-medium">{ext.displayName}</span>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-4">
+          <div className="flex items-start gap-3 mb-4">
+            <Avatar className="h-12 w-12 rounded-md border border-border bg-muted">
+              <AvatarFallback className="rounded-md text-muted-foreground font-bold text-lg">
+                {ext.displayName[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h3 className="text-base font-semibold text-foreground">{ext.displayName}</h3>
+              <p className="text-xs text-muted-foreground">
+                v{ext.version} · {ext.publisher}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-4">{ext.description}</p>
+
+          <div className="flex items-center gap-2 mb-4">
+            <Button
+              size="compact"
+              variant={ext.enabled ? "outline" : "default"}
+              onClick={() => onToggleEnabled(ext.name, !ext.enabled)}
+            >
+              {ext.enabled ? "Disable" : "Enable"}
+            </Button>
+            {ext.installed && (
+              <Button size="compact" variant="destructive">
+                <TrashIcon className="w-3 h-3 mr-1" />
+                Uninstall
+              </Button>
+            )}
+          </div>
+
+          <Separator className="my-4" />
+
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Details</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <span className="text-muted-foreground">Publisher</span>
+              <span className="text-foreground">{ext.publisher}</span>
+              <span className="text-muted-foreground">Version</span>
+              <span className="text-foreground">{ext.version}</span>
+              {ext.downloads > 0 && (
+                <>
+                  <span className="text-muted-foreground">Downloads</span>
+                  <span className="text-foreground">{ext.downloads.toLocaleString()}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+function ExtensionItem({
+  ext,
+  onClick,
+  onToggleEnabled,
+}: {
+  ext: MarketplaceExtension;
+  onClick: () => void;
+  onToggleEnabled: (enabled: boolean) => void;
 }) {
   const formatDownloads = (count: number): string => {
     if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
@@ -209,9 +285,11 @@ function ExtensionItem({
   };
 
   return (
-    <div className="group flex items-start gap-3 p-3 border-b border-sidebar-border hover:bg-sidebar-accent/30 transition-all cursor-default">
-      <Avatar className="h-10 w-10 rounded-md border border-border bg-muted">
-        <AvatarImage src={ext.icon} />
+    <div
+      className="group flex items-start gap-3 p-3 border-b border-sidebar-border hover:bg-sidebar-accent/30 transition-all cursor-pointer"
+      onClick={onClick}
+    >
+      <Avatar className="h-10 w-10 rounded-md border border-border bg-muted flex-shrink-0">
         <AvatarFallback className="rounded-md text-muted-foreground font-bold">
           {ext.displayName[0]}
         </AvatarFallback>
@@ -222,17 +300,28 @@ function ExtensionItem({
           <h3 className="text-sm font-medium text-foreground truncate group-hover:text-blue-400 transition-colors">
             {ext.displayName}
           </h3>
-          <Button
-            size="sm"
-            variant={isInstalled ? "secondary" : "default"}
-            className="h-7 px-3 text-[10px] font-bold"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAction();
-            }}
-          >
-            {isInstalled ? "Uninstall" : "Install"}
-          </Button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {ext.installed && (
+              <Switch
+                checked={ext.enabled}
+                onCheckedChange={onToggleEnabled}
+                className="scale-75"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            {!ext.installed && (
+              <Button
+                size="sm"
+                variant="default"
+                className="h-7 px-3 text-[10px] font-bold"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                Install
+              </Button>
+            )}
+          </div>
         </div>
 
         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
@@ -240,25 +329,20 @@ function ExtensionItem({
         </p>
 
         <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
-          <span className="font-medium text-muted-foreground">
-            {ext.publisher}
-          </span>
-          <div className="flex items-center gap-1">
-            <StarIcon className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500" />
-            <span>{ext.rating}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <DownloadIcon className="h-2.5 w-2.5" />
-            <span>{formatDownloads(ext.downloads)}</span>
-          </div>
-          {isInstalled && (
-            <Badge
-              variant="outline"
-              className="h-4 px-1.5 py-0 text-[8px] border-green-500/50 text-green-500 bg-green-500/5 uppercase font-black"
-            >
-              Installed
-            </Badge>
+          <span className="font-medium text-muted-foreground">{ext.publisher}</span>
+          {ext.rating > 0 && (
+            <div className="flex items-center gap-1">
+              <StarIcon className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500" />
+              <span>{ext.rating}</span>
+            </div>
           )}
+          {ext.downloads > 0 && (
+            <div className="flex items-center gap-1">
+              <DownloadIcon className="h-2.5 w-2.5" />
+              <span>{formatDownloads(ext.downloads)}</span>
+            </div>
+          )}
+          <span className="text-muted-foreground">v{ext.version}</span>
         </div>
       </div>
     </div>

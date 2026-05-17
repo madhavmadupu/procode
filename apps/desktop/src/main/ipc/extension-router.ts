@@ -4,19 +4,52 @@ import type { TrpcContext } from "./trpc.js";
 
 const t = initTRPC.context<TrpcContext>().create();
 
+const BUILTIN_EXTENSIONS = [
+  {
+    name: "procode-themes",
+    displayName: "ProCode Default Themes",
+    version: "1.0.0",
+    description: "Built-in dark and light themes for ProCode",
+    publisher: "procode",
+    enabled: true,
+  },
+  {
+    name: "wordcount",
+    displayName: "Word Count",
+    version: "1.0.0",
+    description: "Shows word count in status bar for markdown files",
+    publisher: "procode",
+    enabled: true,
+  },
+  {
+    name: "fileheader",
+    displayName: "File Header",
+    version: "1.0.0",
+    description: "Inserts file header comments on save",
+    publisher: "procode",
+    enabled: true,
+  },
+];
+
 export const extensionRouter = t.router({
   list: t.procedure.query(({ ctx }) => {
     const extensionHost = ctx.extensionHost;
-    if (!extensionHost) {
-      return [];
-    }
-    return extensionHost.getAllExtensions().map(ext => ({
-      name: ext.manifest.name,
-      displayName: ext.manifest.displayName,
-      version: ext.manifest.version,
-      description: ext.manifest.description,
-      isActive: ext.isActive,
-    }));
+    const registered = extensionHost
+      ? extensionHost.getAllExtensions().map(ext => ({
+          name: ext.manifest.name,
+          displayName: ext.manifest.displayName,
+          version: ext.manifest.version,
+          description: ext.manifest.description,
+          isActive: ext.isActive,
+          publisher: "procode",
+          enabled: true,
+        }))
+      : [];
+
+    const registeredNames = new Set(registered.map(e => e.name));
+    const builtins = BUILTIN_EXTENSIONS.filter(b => !registeredNames.has(b.name));
+
+    return [...registered, ...builtins];
   }),
 
   activate: t.procedure
