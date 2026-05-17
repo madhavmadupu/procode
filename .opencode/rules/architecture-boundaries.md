@@ -13,7 +13,7 @@
 
 ## Data Security
 
-- NEVER store sensitive data (API keys, tokens, credentials) in SQLite or SurrealDB. Use Electron's `safeStorage`.
+- NEVER store sensitive data (API keys, tokens, credentials) in SQLite. Use Electron's `safeStorage`.
 
 ## Rust Safety
 

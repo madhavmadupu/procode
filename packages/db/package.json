@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@procode/types": "workspace:*",
-    "@procode/utils": "workspace:*"
+    "@procode/utils": "workspace:*",
+    "better-sqlite3": "^11.6.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

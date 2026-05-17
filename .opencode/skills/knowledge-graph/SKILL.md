@@ -66,4 +66,4 @@ Before writing any non-trivial code change, ALWAYS:
 - Rust engine: `native/procode-graph/src/lib.rs`
 - Node types: File, Module, Function, Class, Interface, Variable, Type, Constant
 - Edge types: CONTAINS, IMPORTS, CALLS, IMPLEMENTS, EXTENDS, EXPORTS, TESTS, DOCUMENTS, DEPENDS_ON, SIMILAR_TO, MODIFIED_BY, CREATED_IN, CO_CHANGED
-- In-memory: petgraph (Rust), Persistence: SurrealDB
+- In-memory: petgraph (Rust), Persistence: SQLite with recursive CTEs

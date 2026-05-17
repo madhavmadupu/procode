@@ -54,8 +54,8 @@ pub enum GraphError {
     NodeNotFound(String),
     #[error("Cycle detected involving node: {0}")]
     CycleDetected(String),
-    #[error("Database sync failed: {0}")]
-    SyncFailed(#[from] surrealdb::Error),
+    #[error("Database error: {0}")]
+    DbError(#[from] rusqlite::Error),
 }
 
 // Always propagate with context

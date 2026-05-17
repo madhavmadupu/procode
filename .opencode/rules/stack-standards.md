@@ -30,8 +30,7 @@
 | Embeddings | Ollama REST API | `nomic-embed-text` model, batch requests. ALWAYS Ollama — decoupled from chat provider |
 | Vector index | Custom HNSW (Rust) | In `native/procode-vector` |
 | LLM Providers | Two-tier interface | See Provider Strategy below |
-| App DB | SQLite via better-sqlite3 | Synchronous OK in main process only |
-| Graph DB | SurrealDB embedded | Async only; use connection pool |
+| App DB + Graph | SQLite via better-sqlite3 | Synchronous OK in main process only. Recursive CTEs for graph traversal. Single dependency, public domain license.
 | Testing | Vitest + Playwright | Vitest for unit/integration, Playwright for E2E |
 | Error handling (Rust) | anyhow (apps) + thiserror (libs) | Never use `unwrap()` in library code |
 
