@@ -9,7 +9,7 @@ export function TerminalPanel() {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const { sessions, activeSessionId, createSession, killSession, setActiveSession } = useTerminalStore();
+  const { sessions, activeSessionId, createSession, killSession, setActiveSession, registerDataCallback, unregisterDataCallback } = useTerminalStore();
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
@@ -57,21 +57,30 @@ export function TerminalPanel() {
       }
     });
 
-    const handleResize = () => fitAddon.fit();
+    const handleResize = () => {
+      fitAddon.fit();
+      if (activeSessionId && xtermRef.current) {
+        const { cols, rows } = xtermRef.current;
+        trpc.terminal.resize({ id: activeSessionId, rows, cols });
+      }
+    };
     window.addEventListener("resize", handleResize);
+
+    const unsubscribe = window.procode.ipc.on("terminal-event", (data: unknown) => {
+      const { id, event } = data as { id: string; event: { type: string; data?: string } };
+      if (event.type === "data" && event.data) {
+        const term = xtermRef.current;
+        if (term && id === activeSessionId) {
+          term.write(event.data);
+        }
+      }
+    });
 
     return () => {
       window.removeEventListener("resize", handleResize);
+      unsubscribe();
       term.dispose();
     };
-  }, []);
-
-  useEffect(() => {
-    if (!activeSessionId || !xtermRef.current) return;
-
-    xtermRef.current.clear();
-    xtermRef.current.writeln(`\x1b[32mTerminal session started\x1b[0m`);
-    xtermRef.current.write("$ ");
   }, [activeSessionId]);
 
   const handleCreateTerminal = useCallback(async () => {

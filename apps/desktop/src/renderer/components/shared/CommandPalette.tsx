@@ -28,11 +28,13 @@ export function CommandPalette() {
         files.push(entry);
       } else {
         const dir = entry as DirectoryEntry;
-        dir.children.forEach(traverse);
+        if (dir.children) {
+          dir.children.forEach(traverse);
+        }
       }
     };
 
-    if (root) {
+    if (root?.children) {
       root.children.forEach(traverse);
     }
 

@@ -4,6 +4,7 @@ import { TerminalOptions, TerminalEvent, TerminalSessionInfo } from "./TerminalP
 export class TerminalHost {
   private sessions = new Map<string, TerminalSession>();
   private listeners = new Map<string, (event: TerminalEvent) => void>();
+  private globalListeners: Array<(id: string, event: TerminalEvent) => void> = [];
 
   createSession(options?: TerminalOptions & { name?: string }): TerminalSessionInfo {
     const id = `term-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -21,6 +22,9 @@ export class TerminalHost {
       const listener = this.listeners.get(id);
       if (listener) {
         listener(event);
+      }
+      for (const globalListener of this.globalListeners) {
+        globalListener(id, event);
       }
     });
 
@@ -65,6 +69,7 @@ export class TerminalHost {
     }
     this.sessions.clear();
     this.listeners.clear();
+    this.globalListeners.length = 0;
   }
 
   onEvent(id: string, callback: (event: TerminalEvent) => void): void {
@@ -73,6 +78,17 @@ export class TerminalHost {
 
   removeListener(id: string): void {
     this.listeners.delete(id);
+  }
+
+  onEventAll(callback: (id: string, event: TerminalEvent) => void): void {
+    this.globalListeners.push(callback);
+  }
+
+  removeGlobalListener(callback: (id: string, event: TerminalEvent) => void): void {
+    const index = this.globalListeners.indexOf(callback);
+    if (index !== -1) {
+      this.globalListeners.splice(index, 1);
+    }
   }
 
   renameSession(id: string, name: string): void {

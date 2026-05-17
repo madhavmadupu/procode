@@ -18,13 +18,14 @@ export default defineConfig({
       outDir: "dist/preload",
       lib: {
         entry: "src/main/preload/index.ts",
+        formats: ["cjs"],
       },
     },
   },
   renderer: {
     root: "src/renderer",
     build: {
-      outDir: "../../dist/renderer",
+      outDir: "dist/renderer",
     },
     resolve: {
       alias: {

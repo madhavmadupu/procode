@@ -59,7 +59,7 @@ function WorkspaceStep({ onNext, onBack }: StepProps) {
 
   const handleSelectFolder = async () => {
     try {
-      const path = await window.procode.ipc("open-folder-dialog", {});
+      const path = await window.procode.ipc.invoke("open-folder-dialog", {});
       if (path) {
         setWorkspacePath(path);
         setError(null);

@@ -1,4 +1,14 @@
-import { ipcRenderer } from "electron";
+declare global {
+  interface Window {
+    procode: {
+      ipc: {
+        invoke: (channel: string, payload: unknown) => Promise<unknown>;
+        send: (channel: string, payload: unknown) => void;
+        on: (channel: string, callback: (...args: unknown[]) => void) => () => void;
+      };
+    };
+  }
+}
 
 let requestId = 0;
 
@@ -35,12 +45,13 @@ export async function trpcCall<T>(
 
   return new Promise<T>((resolve, reject) => {
     const timeout = setTimeout(() => {
-      ipcRenderer.removeAllListeners(responseChannel);
+      window.procode.ipc.on(responseChannel, () => {});
       reject(new Error(`tRPC call timed out: ${router}.${procedure}`));
     }, 10000);
 
-    ipcRenderer.once(responseChannel, (_event, response: TrpcResponse) => {
+    const unsubscribe = window.procode.ipc.on(responseChannel, (response: TrpcResponse) => {
       clearTimeout(timeout);
+      unsubscribe();
 
       if (response.result.error) {
         reject(new Error(response.result.error.message));
@@ -49,7 +60,7 @@ export async function trpcCall<T>(
       }
     });
 
-    ipcRenderer.send("trpc-request", request);
+    window.procode.ipc.send("trpc-request", request);
   });
 }
 

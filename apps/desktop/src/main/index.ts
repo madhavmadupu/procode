@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FileChange } from "@procode/types";
@@ -36,7 +36,7 @@ function createWindow() {
     minHeight: 600,
     titleBarStyle: "hiddenInset",
     webPreferences: {
-      preload: path.join(__dirname, "../preload/index.js"),
+      preload: path.join(__dirname, "../preload/index.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -47,7 +47,10 @@ function createWindow() {
     mainWindow.loadURL("http://localhost:5173");
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+    const indexPath = path.join(__dirname, "../renderer/index.html");
+    console.log("Loading renderer from:", indexPath);
+    mainWindow.loadFile(indexPath);
+    mainWindow.webContents.openDevTools();
   }
 
   mainWindow.on("closed", () => {
@@ -64,13 +67,25 @@ async function initializeServices() {
   dapHost = new DAPHost();
   terminalHost = new TerminalHost();
   extensionHost = new ExtensionHost();
-
-  registerTrpcIpcHandlers(fileSystemService, settingsService, lspHost, dapHost, terminalHost, extensionHost);
 }
 
 app.whenReady().then(async () => {
+  ipcMain.handle("open-folder-dialog", async () => {
+    const result = await dialog.showOpenDialog(mainWindow!, {
+      properties: ["openDirectory"],
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    return null;
+  });
+
   await initializeServices();
   createWindow();
+
+  if (mainWindow) {
+    registerTrpcIpcHandlers(mainWindow, fileSystemService!, settingsService!, lspHost!, dapHost!, terminalHost!, extensionHost!);
+  }
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

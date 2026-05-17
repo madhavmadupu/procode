@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { ipcMain, BrowserWindow } from "electron";
 import type { TrpcContext } from "./trpc.js";
 import type { FileSystemService } from "../services/file-system.js";
 import type { SettingsService } from "../services/settings.js";
@@ -9,6 +9,7 @@ import type { ExtensionHost } from "@procode/extension-api";
 import { appRouter } from "./index.js";
 
 const TRPC_CHANNEL = "trpc-request";
+const TERMINAL_EVENT_CHANNEL = "terminal-event";
 
 interface TrpcRequest {
   id: number;
@@ -26,6 +27,7 @@ interface TrpcResponse {
 }
 
 export function registerTrpcIpcHandlers(
+  mainWindow: BrowserWindow,
   fileSystem: FileSystemService,
   settings: SettingsService,
   lspHost: LSPHost,
@@ -43,6 +45,10 @@ export function registerTrpcIpcHandlers(
     extensionHost,
   };
   const caller = appRouter.createCaller(ctx);
+
+  terminalHost.onEventAll((id, event) => {
+    mainWindow.webContents.send(TERMINAL_EVENT_CHANNEL, { id, event });
+  });
 
   ipcMain.on(TRPC_CHANNEL, async (event, request: TrpcRequest) => {
     const responseChannel = `trpc-${request.id}`;

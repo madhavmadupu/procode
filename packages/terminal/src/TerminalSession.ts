@@ -5,6 +5,8 @@ import { TerminalOptions, TerminalEvent } from "./TerminalProtocol";
 export class TerminalSession extends EventEmitter {
   private ptyProcess: pty.IPty | null = null;
   private _isRunning = false;
+  private _rows: number;
+  private _cols: number;
 
   constructor(
     public readonly id: string,
@@ -12,6 +14,8 @@ export class TerminalSession extends EventEmitter {
     private options: TerminalOptions
   ) {
     super();
+    this._rows = options.rows ?? 24;
+    this._cols = options.cols ?? 80;
   }
 
   get isRunning(): boolean {
@@ -38,32 +42,42 @@ export class TerminalSession extends EventEmitter {
       }
     }
 
-    this.ptyProcess = pty.spawn(shell, [], {
-      name: "xterm-256color",
-      cols: this.options.cols ?? 80,
-      rows: this.options.rows ?? 24,
-      cwd: this.options.cwd ?? process.cwd(),
-      env: Object.keys(env).length > 0 ? env : (process.env as Record<string, string>),
-    });
+    try {
+      this.ptyProcess = pty.spawn(shell, [], {
+        name: "xterm-256color",
+        cols: this.options.cols ?? 80,
+        rows: this.options.rows ?? 24,
+        cwd: this.options.cwd ?? process.cwd(),
+        env: Object.keys(env).length > 0 ? env : (process.env as Record<string, string>),
+      });
 
-    this._isRunning = true;
+      this._isRunning = true;
 
-    this.ptyProcess.onData((data) => {
-      this.emit("event", {
-        type: "data",
-        sessionId: this.id,
-        data,
-      } as TerminalEvent);
-    });
+      this.ptyProcess.onData((data) => {
+        this.emit("event", {
+          type: "data",
+          sessionId: this.id,
+          data,
+        } as TerminalEvent);
+      });
 
-    this.ptyProcess.onExit(({ exitCode }) => {
+      this.ptyProcess.onExit(({ exitCode }) => {
+        this._isRunning = false;
+        this.emit("event", {
+          type: "exit",
+          sessionId: this.id,
+          exitCode,
+        } as TerminalEvent);
+      });
+    } catch (error) {
       this._isRunning = false;
       this.emit("event", {
         type: "exit",
         sessionId: this.id,
-        exitCode,
+        exitCode: 1,
       } as TerminalEvent);
-    });
+      throw error;
+    }
   }
 
   write(data: string): void {
@@ -71,6 +85,8 @@ export class TerminalSession extends EventEmitter {
   }
 
   resize(rows: number, cols: number): void {
+    this._rows = rows;
+    this._cols = cols;
     this.ptyProcess?.resize(cols, rows);
     this.emit("event", {
       type: "resize",
@@ -91,8 +107,8 @@ export class TerminalSession extends EventEmitter {
       id: this.id,
       name: this.name,
       pid: this.pid,
-      rows: this.options.rows ?? 24,
-      cols: this.options.cols ?? 80,
+      rows: this._rows,
+      cols: this._cols,
       isRunning: this.isRunning,
     };
   }

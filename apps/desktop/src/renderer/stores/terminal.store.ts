@@ -15,6 +15,7 @@ interface TerminalStore {
   activeSessionId: string | null;
   isLoading: boolean;
   error: string | null;
+  dataCallbacks: Map<string, (data: string) => void>;
 
   createSession: (options?: { name?: string; cwd?: string }) => Promise<void>;
   killSession: (id: string) => Promise<void>;
@@ -22,6 +23,8 @@ interface TerminalStore {
   setActiveSession: (id: string | null) => void;
   renameSession: (id: string, name: string) => Promise<void>;
   refreshSessions: () => Promise<void>;
+  registerDataCallback: (id: string, callback: (data: string) => void) => void;
+  unregisterDataCallback: (id: string) => void;
 }
 
 export const useTerminalStore = create<TerminalStore>((set, get) => ({
@@ -29,11 +32,12 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
   activeSessionId: null,
   isLoading: false,
   error: null,
+  dataCallbacks: new Map(),
 
   createSession: async (options) => {
     set({ isLoading: true, error: null });
     try {
-      const session = await trpc.terminal.create(options);
+      const session = await trpc.terminal.create(options) as TerminalSession;
       set((state) => ({
         sessions: [...state.sessions, session],
         activeSessionId: session.id,
@@ -52,13 +56,10 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
       await trpc.terminal.kill({ id });
       set((state) => {
         const sessions = state.sessions.filter((s) => s.id !== id);
-        const activeSessionId =
-          state.activeSessionId === id
-            ? sessions.length > 0
-              ? sessions[0].id
-              : null
-            : state.activeSessionId;
-        return { sessions, activeSessionId };
+        const newActive = state.activeSessionId === id
+          ? (sessions.length > 0 ? sessions[0]?.id ?? null : null)
+          : state.activeSessionId;
+        return { sessions, activeSessionId: newActive };
       });
     } catch (err) {
       set({ error: err instanceof Error ? err.message : "Failed to kill terminal" });
@@ -93,10 +94,26 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
 
   refreshSessions: async () => {
     try {
-      const sessions = await trpc.terminal.list();
+      const sessions = await trpc.terminal.list() as TerminalSession[];
       set({ sessions });
     } catch (err) {
       set({ error: err instanceof Error ? err.message : "Failed to refresh terminals" });
     }
+  },
+
+  registerDataCallback: (id, callback) => {
+    set((state) => {
+      const newCallbacks = new Map(state.dataCallbacks);
+      newCallbacks.set(id, callback);
+      return { dataCallbacks: newCallbacks };
+    });
+  },
+
+  unregisterDataCallback: (id) => {
+    set((state) => {
+      const newCallbacks = new Map(state.dataCallbacks);
+      newCallbacks.delete(id);
+      return { dataCallbacks: newCallbacks };
+    });
   },
 }));
