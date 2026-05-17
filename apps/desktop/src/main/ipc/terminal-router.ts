@@ -21,12 +21,21 @@ export const terminalRouter = t.router({
         throw new Error("Terminal Host not initialized");
       }
 
+      const workspaceCwd = input.cwd ?? ctx.workspaceRoot ?? undefined;
+
       const info = terminalHost.createSession({
         name: input.name,
-        cwd: input.cwd,
+        cwd: workspaceCwd,
         shell: input.shell,
         rows: input.rows,
         cols: input.cols,
+        env: {
+          ...process.env,
+          PROCODE: "1",
+          PROCODE_WORKSPACE: workspaceCwd ?? "",
+          TERM: "xterm-256color",
+          COLORTERM: "truecolor",
+        } as Record<string, string>,
       });
       return info;
     }),

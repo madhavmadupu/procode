@@ -33,10 +33,12 @@ export class TerminalSession extends EventEmitter {
       ? this.options.shell ?? "powershell.exe"
       : this.options.shell ?? process.env.SHELL ?? "/bin/bash";
 
-    const env: Record<string, string | undefined> = {};
+    const env: Record<string, string> = {
+      ...process.env as Record<string, string>,
+    };
     if (this.options.env) {
       for (const [key, value] of Object.entries(this.options.env)) {
-        if (value !== null) {
+        if (value !== null && value !== undefined) {
           env[key] = value;
         }
       }
@@ -48,7 +50,7 @@ export class TerminalSession extends EventEmitter {
         cols: this.options.cols ?? 80,
         rows: this.options.rows ?? 24,
         cwd: this.options.cwd ?? process.cwd(),
-        env: Object.keys(env).length > 0 ? env : (process.env as Record<string, string>),
+        env,
       });
 
       this._isRunning = true;

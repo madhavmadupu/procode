@@ -37,7 +37,7 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
   createSession: async (options) => {
     set({ isLoading: true, error: null });
     try {
-      const session = await trpc.terminal.create(options) as TerminalSession;
+      const session = await trpc.terminal.create(options ?? {}) as TerminalSession;
       set((state) => ({
         sessions: [...state.sessions, session],
         activeSessionId: session.id,
