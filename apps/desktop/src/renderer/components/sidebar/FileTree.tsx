@@ -5,10 +5,10 @@ import { useTabsStore } from "../../stores/tabs";
 import type { FileEntry, DirectoryEntry } from "@procode/types";
 import { FolderIcon, FileIcon, ChevronRightIcon, ChevronDownIcon } from "../shared/icons";
 import { trpc } from "../../lib/trpc";
+import { ScrollArea } from "../ui";
+import { cn } from "../../lib/utils";
 
-interface FileTreeProps {
-  // Props can be added later if needed
-}
+interface FileTreeProps {}
 
 export function FileTree({}: FileTreeProps) {
   const { root, expandedPaths, selectedPath, toggleExpand, selectFile, setRoot, setLoading } =
@@ -78,9 +78,12 @@ export function FileTree({}: FileTreeProps) {
     return (
       <div key={entry.path}>
         <div
-          className={`flex items-center py-1 px-2 cursor-pointer hover:bg-zinc-800 ${
-            isSelected ? "bg-zinc-800" : ""
-          }`}
+          className={cn(
+            "flex items-center py-1 px-2 cursor-pointer transition-colors",
+            isSelected
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-foreground hover:bg-sidebar-accent/50"
+          )}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
           onClick={() => handleFileClick(entry)}
         >
@@ -97,7 +100,7 @@ export function FileTree({}: FileTreeProps) {
             {isDirectory ? (
               <FolderIcon className="w-4 h-4 text-blue-400" />
             ) : (
-              <FileIcon className="w-4 h-4 text-zinc-400" />
+              <FileIcon className="w-4 h-4 text-muted-foreground" />
             )}
           </span>
           <span className="text-sm truncate">{entry.name}</span>
@@ -114,7 +117,7 @@ export function FileTree({}: FileTreeProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
-        <div className="text-sm text-zinc-500">Loading...</div>
+        <div className="text-sm text-muted-foreground">Loading...</div>
       </div>
     );
   }
@@ -122,10 +125,14 @@ export function FileTree({}: FileTreeProps) {
   if (!root) {
     return (
       <div className="flex items-center justify-center h-32">
-        <div className="text-sm text-zinc-500">No workspace open</div>
+        <div className="text-sm text-muted-foreground">No workspace open</div>
       </div>
     );
   }
 
-  return <div className="py-2">{root.children.map((entry) => renderEntry(entry))}</div>;
+  return (
+    <ScrollArea className="h-full">
+      <div className="py-2">{root.children.map((entry) => renderEntry(entry))}</div>
+    </ScrollArea>
+  );
 }

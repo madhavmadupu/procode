@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAiStore } from '../../stores/ai.store.js';
 import { SparkleIcon, SendIcon, StopIcon, TrashIcon, SearchIcon } from '../shared/icons.js';
+import { Button, Input, Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Badge, Separator, Alert, AlertDescription } from '../ui';
+import { cn } from '../../lib/utils';
 
 export const AgentPanel: React.FC = () => {
   const {
@@ -39,217 +41,201 @@ export const AgentPanel: React.FC = () => {
     searchCodebase(searchQuery.trim());
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed': return <Badge variant="success" className="text-[10px]">{status}</Badge>;
+      case 'running': return <Badge variant="info" className="text-[10px]">{status}</Badge>;
+      case 'failed': return <Badge variant="destructive" className="text-[10px]">{status}</Badge>;
+      default: return <Badge variant="secondary" className="text-[10px]">{status}</Badge>;
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full bg-zinc-900 text-zinc-100">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800">
+    <div className="flex flex-col h-full bg-sidebar">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
           <SparkleIcon className="w-4 h-4 text-purple-400" />
           <span className="text-sm font-medium">AI Assistant</span>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setActiveTab('chat')}
-            className={`px-2 py-1 text-xs rounded ${
-              activeTab === 'chat' ? 'bg-zinc-700' : 'hover:bg-zinc-800'
-            }`}
-          >
-            Chat
-          </button>
-          <button
-            onClick={() => setActiveTab('tasks')}
-            className={`px-2 py-1 text-xs rounded ${
-              activeTab === 'tasks' ? 'bg-zinc-700' : 'hover:bg-zinc-800'
-            }`}
-          >
-            Tasks ({tasks.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('search')}
-            className={`px-2 py-1 text-xs rounded ${
-              activeTab === 'search' ? 'bg-zinc-700' : 'hover:bg-zinc-800'
-            }`}
-          >
-            Search
-          </button>
-        </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={clearChat}
-          className="p-1 hover:bg-zinc-800 rounded"
+          className="h-6 w-6"
           title="Clear chat"
         >
-          <TrashIcon className="w-4 h-4 text-zinc-400" />
-        </button>
+          <TrashIcon className="w-3.5 h-3.5" />
+        </Button>
       </div>
 
+      {/* Warnings */}
       {!provider && (
-        <div className="px-4 py-2 bg-yellow-900/30 border-b border-yellow-800 text-yellow-200 text-xs">
-          No AI provider configured. Go to Settings to set up Ollama, OpenAI, or Anthropic.
-        </div>
+        <Alert variant="warning" className="mx-3 mt-2 text-xs">
+          <AlertDescription>
+            No AI provider configured. Go to Settings to set up Ollama, OpenAI, or Anthropic.
+          </AlertDescription>
+        </Alert>
       )}
 
       {error && (
-        <div className="px-4 py-2 bg-red-900/30 border-b border-red-800 text-red-200 text-xs">
-          {error}
-        </div>
+        <Alert variant="destructive" className="mx-3 mt-2 text-xs">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-        {activeTab === 'chat' && (
-          <>
-            {chatMessages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-zinc-500">
-                <SparkleIcon className="w-12 h-12 mb-3 opacity-50" />
-                <p className="text-sm">Ask me anything about your codebase</p>
-                <p className="text-xs mt-1">
-                  {provider ? `Connected to ${provider} (${model})` : 'Not connected'}
-                </p>
-              </div>
-            )}
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col">
+        <div className="px-3 py-2 border-b border-sidebar-border">
+          <TabsList className="grid w-full grid-cols-3 h-8">
+            <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
+            <TabsTrigger value="tasks" className="text-xs">Tasks ({tasks.length})</TabsTrigger>
+            <TabsTrigger value="search" className="text-xs">Search</TabsTrigger>
+          </TabsList>
+        </div>
 
-            {chatMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+        <ScrollArea className="flex-1">
+          {/* Chat Tab */}
+          <TabsContent value="chat" className="m-0 p-0 flex-1">
+            <div className="px-3 py-3 space-y-3 min-h-full">
+              {chatMessages.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                  <SparkleIcon className="w-12 h-12 mb-3 opacity-50" />
+                  <p className="text-sm">Ask me anything about your codebase</p>
+                  <p className="text-xs mt-1">
+                    {provider ? `Connected to ${provider} (${model})` : 'Not connected'}
+                  </p>
+                </div>
+              )}
+
+              {chatMessages.map((message) => (
                 <div
-                  className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                    message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : message.role === 'assistant'
-                      ? 'bg-zinc-800 text-zinc-100'
-                      : 'bg-zinc-700 text-zinc-300'
-                  }`}
-                >
-                  <pre className="whitespace-pre-wrap font-mono text-xs">
-                    {message.content}
-                  </pre>
-                </div>
-              </div>
-            ))}
-
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-zinc-800 rounded-lg px-3 py-2 text-sm">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-
-        {activeTab === 'tasks' && (
-          <div className="space-y-2">
-            {tasks.length === 0 ? (
-              <div className="text-center text-zinc-500 text-sm py-8">
-                No tasks yet. Use chat to start a task.
-              </div>
-            ) : (
-              tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="bg-zinc-800 rounded-lg p-3 text-sm"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">{task.role}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs ${
-                        task.status === 'completed'
-                          ? 'bg-green-900/50 text-green-300'
-                          : task.status === 'running'
-                          ? 'bg-blue-900/50 text-blue-300'
-                          : task.status === 'failed'
-                          ? 'bg-red-900/50 text-red-300'
-                          : 'bg-zinc-700 text-zinc-400'
-                      }`}
-                    >
-                      {task.status}
-                    </span>
-                  </div>
-                  <p className="text-zinc-300 text-xs mb-2">{task.description}</p>
-                  {task.result && (
-                    <pre className="bg-zinc-900 rounded p-2 text-xs whitespace-pre-wrap">
-                      {task.result}
-                    </pre>
+                  key={message.id}
+                  className={cn(
+                    "flex",
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
                   )}
-                  {task.error && (
-                    <p className="text-red-400 text-xs">{task.error}</p>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'search' && (
-          <div className="space-y-3">
-            <form onSubmit={handleSearch} className="flex gap-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search codebase..."
-                className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
-              />
-              <button
-                type="submit"
-                className="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm"
-              >
-                <SearchIcon className="w-4 h-4" />
-              </button>
-            </form>
-
-            {searchResults.length > 0 && (
-              <div className="space-y-2">
-                {searchResults.map((result, index) => (
+                >
                   <div
-                    key={index}
-                    className="bg-zinc-800 rounded-lg p-3 text-sm"
+                    className={cn(
+                      "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+                      message.role === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : message.role === 'assistant'
+                        ? 'bg-sidebar-accent text-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    )}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-mono text-xs text-purple-400">
-                        {result.chunk.metadata.path}
-                      </span>
-                      <span className="text-xs text-zinc-500">
-                        score: {result.score.toFixed(3)}
-                      </span>
-                    </div>
-                    <pre className="bg-zinc-900 rounded p-2 text-xs whitespace-pre-wrap overflow-auto max-h-32">
-                      {result.chunk.content}
+                    <pre className="whitespace-pre-wrap font-mono text-xs">
+                      {message.content}
                     </pre>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+                </div>
+              ))}
 
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-sidebar-accent rounded-lg px-3 py-2 text-sm">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </TabsContent>
+
+          {/* Tasks Tab */}
+          <TabsContent value="tasks" className="m-0 p-0">
+            <div className="px-3 py-3 space-y-2">
+              {tasks.length === 0 ? (
+                <div className="text-center text-muted-foreground text-sm py-8">
+                  No tasks yet. Use chat to start a task.
+                </div>
+              ) : (
+                tasks.map((task) => (
+                  <div key={task.id} className="bg-sidebar-accent rounded-lg p-3 text-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium">{task.role}</span>
+                      {getStatusBadge(task.status)}
+                    </div>
+                    <p className="text-muted-foreground text-xs mb-2">{task.description}</p>
+                    {task.result && (
+                      <pre className="bg-background rounded p-2 text-xs whitespace-pre-wrap">
+                        {task.result}
+                      </pre>
+                    )}
+                    {task.error && (
+                      <p className="text-red-400 text-xs">{task.error}</p>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Search Tab */}
+          <TabsContent value="search" className="m-0 p-0">
+            <div className="px-3 py-3 space-y-3">
+              <form onSubmit={handleSearch} className="flex gap-2">
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search codebase..."
+                  className="flex-1 bg-sidebar-accent/50 border-border"
+                />
+                <Button type="submit" size="icon">
+                  <SearchIcon className="w-4 h-4" />
+                </Button>
+              </form>
+
+              {searchResults.length > 0 && (
+                <div className="space-y-2">
+                  {searchResults.map((result, index) => (
+                    <div key={index} className="bg-sidebar-accent rounded-lg p-3 text-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-xs text-purple-400">
+                          {result.chunk.metadata.path}
+                        </span>
+                        <Badge variant="outline" className="text-[10px]">
+                          score: {result.score.toFixed(3)}
+                        </Badge>
+                      </div>
+                      <pre className="bg-background rounded p-2 text-xs whitespace-pre-wrap overflow-auto max-h-32">
+                        {result.chunk.content}
+                      </pre>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </ScrollArea>
+      </Tabs>
+
+      {/* Chat Input */}
       {activeTab === 'chat' && (
-        <form
-          onSubmit={handleSubmit}
-          className="px-4 py-3 border-t border-zinc-800"
-        >
+        <form onSubmit={handleSubmit} className="px-3 py-3 border-t border-sidebar-border">
           <div className="flex gap-2">
-            <input
+            <Input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about your code..."
-              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-purple-500"
+              className="flex-1 bg-sidebar-accent/50 border-border"
               disabled={isLoading}
             />
-            <button
+            <Button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+              size="icon"
             >
-              <SendIcon className="w-4 h-4" />
-            </button>
+              {isLoading ? <StopIcon className="w-4 h-4" /> : <SendIcon className="w-4 h-4" />}
+            </Button>
           </div>
         </form>
       )}

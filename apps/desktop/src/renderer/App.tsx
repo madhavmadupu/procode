@@ -22,12 +22,52 @@ import { DebugPanel } from "./components/shared/DebugPanel";
 import { TerminalPanel } from "./components/shared/TerminalPanel";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { NotificationToast } from "./components/shared/NotificationToast";
-import { FolderIcon, SourceControlIcon, ClockIcon, SparkleIcon, BugIcon, AlertIcon, TerminalIcon, ExtensionsIcon } from "./components/shared/icons";
+import {
+  FolderIcon,
+  SourceControlIcon,
+  ClockIcon,
+  SparkleIcon,
+  BugIcon,
+  AlertIcon,
+  TerminalIcon,
+  ExtensionsIcon,
+} from "./components/shared/icons";
+import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, ScrollArea } from "./components/ui";
+import { cn } from "./lib/utils";
 
 const ExtensionPanel = lazy(() => import("./components/sidebar/ExtensionPanel"));
 
 type SidebarPanel = "explorer" | "source-control" | "timeline" | "agent" | "debug" | "problems" | "extensions";
-type BottomPanel = "none" | "terminal";
+
+interface ActivityButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function ActivityButton({ icon, label, isActive, onClick }: ActivityButtonProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant={isActive ? "ghost-active" : "ghost"}
+          size="icon"
+          onClick={onClick}
+          aria-label={label}
+          aria-pressed={isActive}
+          className={cn(
+            "h-12 w-12 rounded-none",
+            isActive ? "text-activity-bar-foreground-active" : "text-activity-bar-foreground"
+          )}
+        >
+          {icon}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 function App() {
   const { rootPath, setWorkspace, state } = useWorkspaceStore();
@@ -35,7 +75,7 @@ function App() {
   const { hasCompletedOnboarding } = useFirstRunStore();
   const [showOpenDialog, setShowOpenDialog] = useState(!rootPath);
   const [activePanel, setActivePanel] = useState<SidebarPanel>("explorer");
-  const [bottomPanel, setBottomPanel] = useState<BottomPanel>("none");
+  const [bottomPanelOpen, setBottomPanelOpen] = useState(false);
 
   const lspStore = useLspStore();
   const dapStore = useDapStore();
@@ -57,207 +97,160 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="h-screen w-screen flex flex-col bg-zinc-950 text-zinc-100">
-      <header className="h-8 flex items-center px-4 border-b border-zinc-800 bg-zinc-900 select-none">
-        <span className="text-sm font-medium">ProCode</span>
-        {rootPath && (
-          <span className="ml-4 text-xs text-zinc-500 truncate">
-            {rootPath}
-          </span>
-        )}
-      </header>
-
-      <main className="flex-1 flex overflow-hidden">
-        {/* Activity Bar */}
-        {isSidebarOpen && rootPath && (
-          <div className="w-12 border-r border-zinc-800 bg-zinc-900 flex flex-col items-center py-2 gap-1" role="navigation" aria-label="Activity Bar">
-            <button
-              onClick={() => setActivePanel("explorer")}
-              className={`p-2 rounded transition-colors ${
-                activePanel === "explorer"
-                  ? "text-zinc-100 bg-zinc-800"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-              title="Explorer"
-              aria-label="Explorer"
-              aria-pressed={activePanel === "explorer"}
-            >
-              <FolderIcon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActivePanel("source-control")}
-              className={`p-2 rounded transition-colors ${
-                activePanel === "source-control"
-                  ? "text-zinc-100 bg-zinc-800"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-              title="Source Control"
-              aria-label="Source Control"
-              aria-pressed={activePanel === "source-control"}
-            >
-              <SourceControlIcon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActivePanel("debug")}
-              className={`p-2 rounded transition-colors ${
-                activePanel === "debug"
-                  ? "text-zinc-100 bg-zinc-800"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-              title="Run & Debug"
-              aria-label="Run and Debug"
-              aria-pressed={activePanel === "debug"}
-            >
-              <BugIcon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActivePanel("problems")}
-              className={`p-2 rounded transition-colors ${
-                activePanel === "problems"
-                  ? "text-zinc-100 bg-zinc-800"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-              title="Problems"
-              aria-label="Problems"
-              aria-pressed={activePanel === "problems"}
-            >
-              <AlertIcon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActivePanel("timeline")}
-              className={`p-2 rounded transition-colors ${
-                activePanel === "timeline"
-                  ? "text-zinc-100 bg-zinc-800"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-              title="Timeline"
-              aria-label="Timeline"
-              aria-pressed={activePanel === "timeline"}
-            >
-              <ClockIcon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActivePanel("agent")}
-              className={`p-2 rounded transition-colors ${
-                activePanel === "agent"
-                  ? "text-zinc-100 bg-zinc-800"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-              title="AI Agent"
-              aria-label="AI Agent"
-              aria-pressed={activePanel === "agent"}
-            >
-              <SparkleIcon className="w-5 h-5" />
-            </button>
-            <div className="flex-1" />
-            <button
-              onClick={() => setBottomPanel(bottomPanel === "terminal" ? "none" : "terminal")}
-              className={`p-2 rounded transition-colors ${
-                bottomPanel === "terminal"
-                  ? "text-zinc-100 bg-zinc-800"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-              title="Terminal"
-              aria-label="Terminal"
-              aria-pressed={bottomPanel === "terminal"}
-            >
-              <TerminalIcon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActivePanel("extensions")}
-              className={`p-2 rounded transition-colors ${
-                activePanel === "extensions"
-                  ? "text-zinc-100 bg-zinc-800"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-              title="Extensions"
-              aria-label="Extensions"
-              aria-pressed={activePanel === "extensions"}
-            >
-              <ExtensionsIcon className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        {/* Sidebar Panel */}
-        {isSidebarOpen && rootPath && (
-          <aside className="w-64 border-r border-zinc-800 bg-zinc-900 overflow-y-auto" role="complementary" aria-label="Sidebar Panel">
-            {activePanel === "explorer" && <FileTree />}
-            {activePanel === "source-control" && <SourceControl />}
-            {activePanel === "timeline" && <Timeline />}
-            {activePanel === "agent" && <AgentPanel />}
-            {activePanel === "debug" && (
-              <DebugPanel
-                onBreakpointToggle={(path, line) => {
-                  const existing = dapStore.breakpoints.get(path) ?? [];
-                  const exists = existing.some(bp => bp.line === line);
-                  if (exists) {
-                    const filtered = existing.filter(bp => bp.line !== line);
-                    dapStore.setBreakpoints(path, filtered);
-                  } else {
-                    dapStore.setBreakpoints(path, [...existing, { line, verified: false }]);
-                  }
-                }}
-                breakpoints={dapStore.breakpoints}
-              />
+      <TooltipProvider delayDuration={300}>
+        <div className="h-screen w-screen flex flex-col bg-background text-foreground">
+          {/* Title Bar */}
+          <header className="h-8 flex items-center px-4 border-b border-sidebar-border bg-title-bar text-title-bar-foreground select-none" role="banner">
+            <span className="text-sm font-medium">ProCode</span>
+            {rootPath && (
+              <span className="ml-4 text-xs text-muted-foreground truncate">
+                {rootPath}
+              </span>
             )}
-            {activePanel === "problems" && (
-              <ProblemPanel
-                diagnostics={lspStore.diagnostics}
-                onDiagnosticClick={(diagnostic) => {
-                  console.log("Diagnostic clicked:", diagnostic);
-                }}
-              />
-            )}
-            {activePanel === "extensions" && (
-              <Suspense fallback={<div className="p-4 text-zinc-500 text-sm">Loading extensions...</div>}>
-                <ExtensionPanel />
-              </Suspense>
-            )}
-          </aside>
-        )}
+          </header>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          {rootPath ? (
-            <>
-              <TabBar />
-              <Breadcrumbs />
-              <div className="flex-1 overflow-hidden flex flex-col">
-                <div className="flex-1 overflow-hidden">
-                  <EditorPanel />
-                </div>
-                {bottomPanel === "terminal" && (
-                  <div className="h-64 border-t border-zinc-800">
-                    <TerminalPanel />
+          {/* Main Content */}
+          <main className="flex-1 flex overflow-hidden">
+            {/* Activity Bar */}
+            {isSidebarOpen && rootPath && (
+              <nav className="w-12 border-r border-sidebar-border bg-activity-bar flex flex-col items-center py-2 gap-1" role="navigation" aria-label="Activity Bar">
+                <ActivityButton
+                  icon={<FolderIcon className="w-5 h-5" />}
+                  label="Explorer"
+                  isActive={activePanel === "explorer"}
+                  onClick={() => setActivePanel("explorer")}
+                />
+                <ActivityButton
+                  icon={<SourceControlIcon className="w-5 h-5" />}
+                  label="Source Control"
+                  isActive={activePanel === "source-control"}
+                  onClick={() => setActivePanel("source-control")}
+                />
+                <ActivityButton
+                  icon={<BugIcon className="w-5 h-5" />}
+                  label="Run & Debug"
+                  isActive={activePanel === "debug"}
+                  onClick={() => setActivePanel("debug")}
+                />
+                <ActivityButton
+                  icon={<AlertIcon className="w-5 h-5" />}
+                  label="Problems"
+                  isActive={activePanel === "problems"}
+                  onClick={() => setActivePanel("problems")}
+                />
+                <ActivityButton
+                  icon={<ClockIcon className="w-5 h-5" />}
+                  label="Timeline"
+                  isActive={activePanel === "timeline"}
+                  onClick={() => setActivePanel("timeline")}
+                />
+                <ActivityButton
+                  icon={<SparkleIcon className="w-5 h-5" />}
+                  label="AI Agent"
+                  isActive={activePanel === "agent"}
+                  onClick={() => setActivePanel("agent")}
+                />
+                <div className="flex-1" />
+                <ActivityButton
+                  icon={<TerminalIcon className="w-5 h-5" />}
+                  label="Terminal"
+                  isActive={bottomPanelOpen}
+                  onClick={() => setBottomPanelOpen(!bottomPanelOpen)}
+                />
+                <ActivityButton
+                  icon={<ExtensionsIcon className="w-5 h-5" />}
+                  label="Extensions"
+                  isActive={activePanel === "extensions"}
+                  onClick={() => setActivePanel("extensions")}
+                />
+              </nav>
+            )}
+
+            {/* Sidebar Panel */}
+            {isSidebarOpen && rootPath && (
+              <aside className="w-64 border-r border-sidebar-border bg-sidebar flex flex-col" role="complementary" aria-label="Sidebar Panel">
+                <ScrollArea className="flex-1">
+                  {activePanel === "explorer" && <FileTree />}
+                  {activePanel === "source-control" && <SourceControl />}
+                  {activePanel === "timeline" && <Timeline />}
+                  {activePanel === "agent" && <AgentPanel />}
+                  {activePanel === "debug" && (
+                    <DebugPanel
+                      onBreakpointToggle={(path, line) => {
+                        const existing = dapStore.breakpoints.get(path) ?? [];
+                        const exists = existing.some(bp => bp.line === line);
+                        if (exists) {
+                          const filtered = existing.filter(bp => bp.line !== line);
+                          dapStore.setBreakpoints(path, filtered);
+                        } else {
+                          dapStore.setBreakpoints(path, [...existing, { line, verified: false }]);
+                        }
+                      }}
+                      breakpoints={dapStore.breakpoints}
+                    />
+                  )}
+                  {activePanel === "problems" && (
+                    <ProblemPanel
+                      diagnostics={lspStore.diagnostics}
+                      onDiagnosticClick={(diagnostic) => {
+                        console.log("Diagnostic clicked:", diagnostic);
+                      }}
+                    />
+                  )}
+                  {activePanel === "extensions" && (
+                    <Suspense fallback={<div className="p-4 text-muted-foreground text-sm">Loading extensions...</div>}>
+                      <ExtensionPanel />
+                    </Suspense>
+                  )}
+                </ScrollArea>
+              </aside>
+            )}
+
+            {/* Editor Area */}
+            <div className="flex-1 flex flex-col min-w-0">
+              {rootPath ? (
+                <div className="flex flex-col h-full flex-1">
+                  <div className={cn("flex flex-col h-full", bottomPanelOpen ? "h-[70%]" : "h-full")}>
+                    <TabBar />
+                    <Breadcrumbs />
+                    <div className="flex-1 overflow-hidden">
+                      <EditorPanel />
+                    </div>
                   </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <button
-                onClick={() => setShowOpenDialog(true)}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
-              >
-                Open Folder
-              </button>
+                  {bottomPanelOpen && (
+                    <>
+                      <div className="h-1 bg-border cursor-row-resize" />
+                      <div className="h-64">
+                        <TerminalPanel />
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <Button onClick={() => setShowOpenDialog(true)} size="lg">
+                    Open Folder
+                  </Button>
+                </div>
+              )}
             </div>
+          </main>
+
+          {/* Status Bar */}
+          <StatusBar />
+
+          {/* Overlays */}
+          {showOpenDialog && (
+            <OpenFolderDialog
+              onOpen={handleOpenFolder}
+              onClose={() => rootPath && setShowOpenDialog(false)}
+            />
           )}
+
+          <CommandPalette />
+          <NotificationToast />
         </div>
-      </main>
-
-      <StatusBar />
-
-      {showOpenDialog && (
-        <OpenFolderDialog
-          onOpen={handleOpenFolder}
-          onClose={() => rootPath && setShowOpenDialog(false)}
-        />
-      )}
-
-      <CommandPalette />
-      <NotificationToast />
-    </div>
+      </TooltipProvider>
     </ErrorBoundary>
   );
 }

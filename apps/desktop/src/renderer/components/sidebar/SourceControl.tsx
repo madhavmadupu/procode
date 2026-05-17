@@ -2,18 +2,11 @@ import { useEffect, useState } from "react";
 import { useGitStore } from "../../stores/git.store";
 import { useWorkspaceStore } from "../../stores/workspace";
 import type { FileStatusEntry } from "@procode/types";
-import {
-  FileIcon,
-  PlusIcon,
-  CheckIcon,
-  XIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-} from "../shared/icons";
+import { FileIcon, PlusIcon, XIcon, ChevronRightIcon, ChevronDownIcon } from "../shared/icons";
+import { Button, Textarea, Badge, Separator, ScrollArea, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui";
+import { cn } from "../../lib/utils";
 
-interface SourceControlProps {
-  // Props can be added later if needed
-}
+interface SourceControlProps {}
 
 export function SourceControl({}: SourceControlProps) {
   const { rootPath } = useWorkspaceStore();
@@ -32,7 +25,7 @@ export function SourceControl({}: SourceControlProps) {
 
   const [showStaged, setShowStaged] = useState(true);
   const [showUnstaged, setShowUnstaged] = useState(true);
-  const [showDiscardConfirm, setShowDiscardConfirm] = useState<string | null>(null);
+  const [discardTarget, setDiscardTarget] = useState<string | null>(null);
 
   useEffect(() => {
     if (rootPath) {
@@ -50,7 +43,7 @@ export function SourceControl({}: SourceControlProps) {
 
   const handleDiscard = async (path: string) => {
     await discardChanges([path]);
-    setShowDiscardConfirm(null);
+    setDiscardTarget(null);
   };
 
   const handleCommit = async () => {
@@ -62,39 +55,25 @@ export function SourceControl({}: SourceControlProps) {
 
   const getStatusIndicator = (status: string) => {
     switch (status) {
-      case "modified":
-        return "M";
-      case "added":
-        return "A";
-      case "deleted":
-        return "D";
-      case "untracked":
-        return "U";
-      case "renamed":
-        return "R";
-      case "conflict":
-        return "C";
-      default:
-        return "?";
+      case "modified": return "M";
+      case "added": return "A";
+      case "deleted": return "D";
+      case "untracked": return "U";
+      case "renamed": return "R";
+      case "conflict": return "C";
+      default: return "?";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "modified":
-        return "text-yellow-400";
-      case "added":
-        return "text-green-400";
-      case "deleted":
-        return "text-red-400";
-      case "untracked":
-        return "text-blue-400";
-      case "renamed":
-        return "text-purple-400";
-      case "conflict":
-        return "text-red-500";
-      default:
-        return "text-zinc-400";
+      case "modified": return "text-yellow-400";
+      case "added": return "text-green-400";
+      case "deleted": return "text-red-400";
+      case "untracked": return "text-blue-400";
+      case "renamed": return "text-purple-400";
+      case "conflict": return "text-red-500";
+      default: return "text-muted-foreground";
     }
   };
 
@@ -105,44 +84,50 @@ export function SourceControl({}: SourceControlProps) {
     return (
       <div
         key={file.path}
-        className="flex items-center py-1 px-2 hover:bg-zinc-800 group"
+        className="flex items-center py-1 px-2 hover:bg-sidebar-accent/50 group"
       >
-        <FileIcon className="w-4 h-4 text-zinc-400 mr-2 flex-shrink-0" />
+        <FileIcon className="w-4 h-4 text-muted-foreground mr-2 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="text-sm truncate">{fileName}</div>
           {dirPath && (
-            <div className="text-xs text-zinc-500 truncate">{dirPath}</div>
+            <div className="text-xs text-muted-foreground truncate">{dirPath}</div>
           )}
         </div>
-        <span className={`text-xs font-mono mr-2 ${getStatusColor(file.status)}`}>
+        <span className={cn("text-xs font-mono mr-2", getStatusColor(file.status))}>
           {getStatusIndicator(file.status)}
         </span>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {isStaged ? (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 p-0"
               onClick={() => handleUnstage(file.path)}
-              className="p-1 hover:bg-zinc-700 rounded"
               title="Unstage"
             >
-              <XIcon className="w-3 h-3 text-zinc-400" />
-            </button>
+              <XIcon className="w-3 h-3" />
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 p-0"
               onClick={() => handleStage(file.path)}
-              className="p-1 hover:bg-zinc-700 rounded"
               title="Stage"
             >
-              <PlusIcon className="w-3 h-3 text-zinc-400" />
-            </button>
+              <PlusIcon className="w-3 h-3" />
+            </Button>
           )}
           {!isStaged && file.status !== "untracked" && (
-            <button
-              onClick={() => setShowDiscardConfirm(file.path)}
-              className="p-1 hover:bg-zinc-700 rounded"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 p-0 text-red-400 hover:text-red-300"
+              onClick={() => setDiscardTarget(file.path)}
               title="Discard"
             >
-              <XIcon className="w-3 h-3 text-red-400" />
-            </button>
+              <XIcon className="w-3 h-3" />
+            </Button>
           )}
         </div>
       </div>
@@ -152,7 +137,7 @@ export function SourceControl({}: SourceControlProps) {
   if (!rootPath) {
     return (
       <div className="flex items-center justify-center h-32">
-        <div className="text-sm text-zinc-500">No workspace open</div>
+        <div className="text-sm text-muted-foreground">No workspace open</div>
       </div>
     );
   }
@@ -160,7 +145,7 @@ export function SourceControl({}: SourceControlProps) {
   if (isLoading && !status) {
     return (
       <div className="flex items-center justify-center h-32">
-        <div className="text-sm text-zinc-500">Loading...</div>
+        <div className="text-sm text-muted-foreground">Loading...</div>
       </div>
     );
   }
@@ -168,22 +153,23 @@ export function SourceControl({}: SourceControlProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Commit message input */}
-      <div className="p-2 border-b border-zinc-800">
-        <textarea
+      <div className="p-2 border-b border-sidebar-border">
+        <Textarea
           value={commitMessage}
           onChange={(e) => setCommitMessage(e.target.value)}
           placeholder="Commit message"
-          className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-blue-500"
+          className="w-full bg-sidebar-accent/50 border-border resize-none text-sm"
           rows={3}
         />
         <div className="flex items-center gap-2 mt-2">
-          <button
+          <Button
             onClick={handleCommit}
             disabled={!commitMessage.trim() || isLoading}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:text-zinc-500 text-white text-sm py-1 px-3 rounded transition-colors"
+            className="flex-1"
+            size="compact"
           >
             {isLoading ? "Committing..." : "Commit"}
-          </button>
+          </Button>
         </div>
         {error && (
           <div className="text-xs text-red-400 mt-1">{error}</div>
@@ -191,13 +177,15 @@ export function SourceControl({}: SourceControlProps) {
       </div>
 
       {/* File lists */}
-      <div className="flex-1 overflow-y-auto">
+      <ScrollArea className="flex-1">
         {/* Staged changes */}
         {stagedFiles.length > 0 && (
           <div>
-            <button
+            <Button
+              variant="ghost"
+              size="compact"
               onClick={() => setShowStaged(!showStaged)}
-              className="flex items-center w-full px-2 py-1 text-xs font-semibold text-zinc-400 uppercase tracking-wide hover:bg-zinc-800"
+              className="w-full justify-start px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
             >
               {showStaged ? (
                 <ChevronDownIcon className="w-3 h-3 mr-1" />
@@ -205,21 +193,24 @@ export function SourceControl({}: SourceControlProps) {
                 <ChevronRightIcon className="w-3 h-3 mr-1" />
               )}
               Staged Changes ({stagedFiles.length})
-            </button>
+            </Button>
             {showStaged && (
               <div>
                 {stagedFiles.map((file) => renderFileEntry(file, true))}
               </div>
             )}
+            <Separator className="my-1" />
           </div>
         )}
 
         {/* Unstaged changes */}
         {unstagedFiles.length > 0 && (
           <div>
-            <button
+            <Button
+              variant="ghost"
+              size="compact"
               onClick={() => setShowUnstaged(!showUnstaged)}
-              className="flex items-center w-full px-2 py-1 text-xs font-semibold text-zinc-400 uppercase tracking-wide hover:bg-zinc-800"
+              className="w-full justify-start px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
             >
               {showUnstaged ? (
                 <ChevronDownIcon className="w-3 h-3 mr-1" />
@@ -227,7 +218,7 @@ export function SourceControl({}: SourceControlProps) {
                 <ChevronRightIcon className="w-3 h-3 mr-1" />
               )}
               Changes ({unstagedFiles.length})
-            </button>
+            </Button>
             {showUnstaged && (
               <div>
                 {unstagedFiles.map((file) => renderFileEntry(file, false))}
@@ -239,39 +230,34 @@ export function SourceControl({}: SourceControlProps) {
         {/* No changes */}
         {stagedFiles.length === 0 && unstagedFiles.length === 0 && (
           <div className="flex items-center justify-center h-32">
-            <div className="text-sm text-zinc-500">No changes</div>
+            <div className="text-sm text-muted-foreground">No changes</div>
           </div>
         )}
-      </div>
+      </ScrollArea>
 
-      {/* Discard confirmation */}
-      {showDiscardConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 max-w-sm">
-            <h3 className="text-sm font-semibold text-zinc-100 mb-2">
-              Discard Changes?
-            </h3>
-            <p className="text-xs text-zinc-400 mb-4">
+      {/* Discard confirmation dialog */}
+      <Dialog open={!!discardTarget} onOpenChange={() => setDiscardTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Discard Changes?</DialogTitle>
+            <DialogDescription>
               This will permanently discard changes to{" "}
-              <span className="text-zinc-200">{showDiscardConfirm}</span>
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowDiscardConfirm(null)}
-                className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-sm py-1 px-3 rounded transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDiscard(showDiscardConfirm)}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm py-1 px-3 rounded transition-colors"
-              >
-                Discard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              <span className="text-foreground">{discardTarget}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDiscardTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => discardTarget && handleDiscard(discardTarget)}
+            >
+              Discard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useTabsStore } from "../../stores/tabs";
 import { useEditorStore } from "../../stores/editor";
 import { useWorkspaceStore } from "../../stores/workspace";
 import { useLspIntegration } from "../../hooks/useLspIntegration";
+import { Skeleton } from "../ui";
 
 export function EditorPanel() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -12,6 +13,7 @@ export function EditorPanel() {
   const { config } = useEditorStore();
   const { rootPath } = useWorkspaceStore();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
@@ -52,6 +54,7 @@ export function EditorPanel() {
     });
 
     setIsInitialized(true);
+    setIsLoading(false);
 
     return () => {
       editor.dispose();
@@ -64,12 +67,12 @@ export function EditorPanel() {
 
     const editor = monacoRef.current;
     const model = editor.getModel();
+    const doc = useTabsStore.getState().documents.get(activeTab.path);
 
-    if (model) {
-      monaco.editor.setModelLanguage(model, activeTab.languageId || "plaintext");
+    if (model && doc) {
+      monaco.editor.setModelLanguage(model, doc.languageId || "plaintext");
     }
 
-    const doc = useTabsStore.getState().documents.get(activeTab.path);
     if (doc) {
       editor.setValue(doc.content);
     }
@@ -95,14 +98,26 @@ export function EditorPanel() {
 
   if (!activeTab) {
     return (
-      <div className="h-full flex items-center justify-center bg-zinc-950">
+      <div className="h-full flex items-center justify-center bg-editor">
         <div className="text-center">
-          <p className="text-zinc-500 text-sm">No file open</p>
-          <p className="text-zinc-600 text-xs mt-2">Select a file from the explorer</p>
+          <p className="text-muted-foreground text-sm">No file open</p>
+          <p className="text-muted-foreground/60 text-xs mt-2">Select a file from the explorer</p>
         </div>
       </div>
     );
   }
 
-  return <div ref={editorRef} className="h-full w-full" />;
+  if (isLoading) {
+    return (
+      <div className="h-full p-4 space-y-3 bg-editor">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-4 w-4/5" />
+      </div>
+    );
+  }
+
+  return <div ref={editorRef} className="h-full w-full bg-editor" />;
 }

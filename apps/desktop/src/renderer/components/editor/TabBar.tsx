@@ -1,5 +1,7 @@
 import { useTabsStore } from "../../stores/tabs";
-import { FileIcon } from "../shared/icons";
+import { FileIcon, XIcon } from "lucide-react";
+import { Button, ScrollArea } from "../ui";
+import { cn } from "../../lib/utils";
 
 export function TabBar() {
   const { tabs, activeTabId, setActiveTab, closeTab } = useTabsStore();
@@ -9,34 +11,42 @@ export function TabBar() {
   }
 
   return (
-    <div className="flex items-center bg-zinc-900 border-b border-zinc-800 overflow-x-auto">
-      {tabs.map((tab) => (
-        <div
-          key={tab.id}
-          className={`flex items-center min-w-0 max-w-48 px-3 py-2 border-r border-zinc-800 cursor-pointer ${
-            tab.id === activeTabId
-              ? "bg-zinc-950 text-zinc-100"
-              : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
-          }`}
-          onClick={() => setActiveTab(tab.id)}
-        >
-          <FileIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-          <span className="text-sm truncate">{tab.name}</span>
-          {tab.isDirty && <span className="ml-1 w-2 h-2 rounded-full bg-blue-500" />}
-          <button
-            className="ml-2 p-0.5 rounded hover:bg-zinc-700 flex-shrink-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              closeTab(tab.id);
-            }}
+    <ScrollArea className="w-full">
+      <div className="flex items-center bg-tab-inactive border-b border-tab-border h-9">
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            className={cn(
+              "group flex items-center min-w-[120px] max-w-[200px] h-full px-3 border-r border-tab-border cursor-pointer transition-all",
+              tab.id === activeTabId
+                ? "bg-tab-active text-foreground border-b-2 border-b-blue-500"
+                : "bg-tab-inactive text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+            )}
+            onClick={() => setActiveTab(tab.id)}
+            title={tab.path}
           >
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-      ))}
-    </div>
+            <FileIcon className="w-3.5 h-3.5 mr-2 flex-shrink-0 opacity-70 group-hover:opacity-100" />
+            <span className="text-[11px] font-medium truncate flex-1">{tab.name}</span>
+            
+            <div className="flex items-center ml-2 gap-1.5">
+              {tab.isDirty && (
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 hover:bg-muted-foreground/20 rounded-sm transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeTab(tab.id);
+                }}
+              >
+                <XIcon className="w-2.5 h-2.5" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
   );
 }

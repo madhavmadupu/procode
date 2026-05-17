@@ -6,6 +6,16 @@ import { trpc } from "../../lib/trpc";
 import { fuzzyFilter } from "../../lib/fuzzy";
 import { FileIcon, FolderIcon } from "./icons";
 import type { FileEntry, DirectoryEntry } from "@procode/types";
+import {
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+} from "../ui";
+import { cn } from "../../lib/utils";
 
 interface FileResult {
   entry: FileEntry;
@@ -127,6 +137,7 @@ export function CommandPalette() {
 
     for (let i = 0; i < indices.length; i++) {
       const matchIndex = indices[i];
+      if (matchIndex === undefined) continue;
 
       if (matchIndex > currentIndex) {
         parts.push(<span key={`text-${currentIndex}`}>{text.slice(currentIndex, matchIndex)}</span>);
@@ -148,66 +159,50 @@ export function CommandPalette() {
     return <>{parts}</>;
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/50">
-      <div className="w-[600px] max-h-[400px] bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b border-zinc-700">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search files by name..."
-            className="w-full bg-transparent text-zinc-100 text-sm outline-none placeholder:text-zinc-500"
-          />
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {filteredFiles.length === 0 ? (
-            <div className="px-4 py-8 text-center text-zinc-500 text-sm">
-              No files found
-            </div>
-          ) : (
-            filteredFiles.map((file, index) => (
-              <div
-                key={file.entry.path}
-                className={`flex items-center px-4 py-2 cursor-pointer ${
-                  index === selectedIndex ? "bg-blue-600/20" : "hover:bg-zinc-800"
-                }`}
-                onClick={() => handleSelect(file.entry)}
-                onMouseEnter={() => setSelectedIndex(index)}
-              >
-                <span className="mr-3 w-4 h-4 flex items-center justify-center">
-                  {file.entry.isDirectory ? (
-                    <FolderIcon className="w-4 h-4 text-blue-400" />
-                  ) : (
-                    <FileIcon className="w-4 h-4 text-zinc-400" />
-                  )}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-zinc-100 truncate">
-                    {highlightMatch(file.entry.name, file.indices.slice(-file.entry.name.length))}
-                  </div>
-                  <div className="text-xs text-zinc-500 truncate">
-                    {file.entry.path}
-                  </div>
+    <CommandDialog open={isOpen} onOpenChange={(open) => !open && close()}>
+      <CommandInput
+        ref={inputRef}
+        placeholder="Search files by name..."
+        value={query}
+        onValueChange={setQuery}
+      />
+      <CommandList>
+        <CommandEmpty>No files found</CommandEmpty>
+        <CommandGroup heading="Files">
+          {filteredFiles.map((file, index) => (
+            <CommandItem
+              key={file.entry.path}
+              onSelect={() => handleSelect(file.entry)}
+              className={cn(
+                index === selectedIndex && "bg-accent text-accent-foreground"
+              )}
+            >
+              {file.entry.isDirectory ? (
+                <FolderIcon className="w-4 h-4 mr-3 text-blue-400" />
+              ) : (
+                <FileIcon className="w-4 h-4 mr-3 text-muted-foreground" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm truncate">
+                  {highlightMatch(file.entry.name, file.indices.slice(-file.entry.name.length))}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {file.entry.path}
                 </div>
               </div>
-            ))
-          )}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+      <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <span>↑↓ navigate</span>
+          <span>↵ open</span>
+          <span>esc close</span>
         </div>
-
-        <div className="px-4 py-2 border-t border-zinc-700 text-xs text-zinc-500 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <span>↑↓ navigate</span>
-            <span>↵ open</span>
-            <span>esc close</span>
-          </div>
-          <span>{filteredFiles.length} files</span>
-        </div>
+        <span>{filteredFiles.length} files</span>
       </div>
-    </div>
+    </CommandDialog>
   );
 }

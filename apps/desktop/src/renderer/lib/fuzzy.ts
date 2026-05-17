@@ -13,21 +13,27 @@ export function fuzzyMatch(query: string, target: string): FuzzyMatch | null {
   let score = 0;
 
   for (let i = 0; i < targetLower.length && queryIndex < queryLower.length; i++) {
-    if (targetLower[i] === queryLower[queryIndex]) {
+    const char = targetLower.charAt(i);
+    const queryChar = queryLower.charAt(queryIndex);
+    
+    if (char === queryChar) {
       indices.push(i);
 
       // Bonus for matching at word boundaries
-      if (i === 0 || targetLower[i - 1] === "/" || targetLower[i - 1] === "-" || targetLower[i - 1] === "_") {
+      const prevChar = i > 0 ? targetLower.charAt(i - 1) : null;
+      if (i === 0 || prevChar === "/" || prevChar === "-" || prevChar === "_") {
         score += 10;
       }
 
       // Bonus for consecutive matches
-      if (indices.length > 1 && indices[indices.length - 2] === i - 1) {
+      const lastIndex = indices[indices.length - 2];
+      if (indices.length > 1 && lastIndex !== undefined && lastIndex === i - 1) {
         score += 5;
       }
 
       // Bonus for matching uppercase in camelCase
-      if (target[i] === target[i].toUpperCase() && target[i] !== target[i].toLowerCase()) {
+      const originalChar = target.charAt(i);
+      if (originalChar === originalChar.toUpperCase() && originalChar !== originalChar.toLowerCase()) {
         score += 3;
       }
 
@@ -40,9 +46,16 @@ export function fuzzyMatch(query: string, target: string): FuzzyMatch | null {
     return null; // Not all query characters matched
   }
 
+  if (indices.length === 0) return { score: 0, indices: [] };
+
   // Penalty for longer matches (prefer shorter spans)
-  const span = indices[indices.length - 1] - indices[0] + 1;
-  score -= span * 0.5;
+  const lastIndex = indices[indices.length - 1];
+  const firstIndex = indices[0];
+  
+  if (lastIndex !== undefined && firstIndex !== undefined) {
+    const span = lastIndex - firstIndex + 1;
+    score -= span * 0.5;
+  }
 
   return { score, indices };
 }

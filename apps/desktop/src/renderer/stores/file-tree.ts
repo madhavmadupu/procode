@@ -39,11 +39,11 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
       if (entry.path === path) {
         return { ...entry, ...entry };
       }
-      if ("children" in entry) {
+      if ("children" in entry && Array.isArray(entry.children)) {
         return {
           ...entry,
-          children: entry.children.map(updateEntry),
-        };
+          children: (entry.children as FileEntry[]).map(updateEntry),
+        } as DirectoryEntry;
       }
       return entry;
     };

@@ -1,5 +1,19 @@
 import { useEffect, useState } from "react";
 import { useExtensionStore } from "../../stores/extension.store";
+import {
+  ScrollArea,
+  Input,
+  Button,
+  Badge,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "../ui";
+import { SearchIcon, DownloadIcon, StarIcon } from "lucide-react";
 
 interface MarketplaceExtension {
   name: string;
@@ -99,6 +113,95 @@ export function ExtensionPanel() {
 
   const installedExtensions = marketplace.filter((ext) => ext.installed);
 
+  return (
+    <div className="h-full flex flex-col bg-sidebar">
+      {/* Header */}
+      <div className="p-3 border-b border-sidebar-border">
+        <h2 className="text-sm font-semibold text-foreground mb-2">Extensions</h2>
+        <div className="relative">
+          <SearchIcon className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search Marketplace..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-8 text-xs bg-sidebar-accent/50 border-border"
+          />
+        </div>
+      </div>
+
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as "marketplace" | "installed")}
+        className="flex-1 flex flex-col overflow-hidden"
+      >
+        <div className="px-3 py-1 border-b border-sidebar-border bg-sidebar">
+          <TabsList className="grid w-full grid-cols-2 h-8 bg-sidebar-accent/50">
+            <TabsTrigger value="marketplace" className="text-[10px] h-6">
+              Marketplace
+            </TabsTrigger>
+            <TabsTrigger value="installed" className="text-[10px] h-6">
+              Installed ({extensions.length})
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <ScrollArea className="flex-1">
+          <TabsContent value="marketplace" className="m-0 p-0">
+            {filteredMarket.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-xs italic">
+                No extensions found
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {filteredMarket.map((ext) => (
+                  <ExtensionItem
+                    key={ext.name}
+                    ext={ext}
+                    isInstalled={installedNames.has(ext.name)}
+                    onAction={() =>
+                      ext.installed
+                        ? deactivateExtension(ext.name)
+                        : activateExtension(ext.name)
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="installed" className="m-0 p-0">
+            {installedExtensions.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-xs italic">
+                No extensions installed
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {installedExtensions.map((ext) => (
+                  <ExtensionItem
+                    key={ext.name}
+                    ext={ext}
+                    isInstalled={true}
+                    onAction={() => deactivateExtension(ext.name)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </ScrollArea>
+      </Tabs>
+    </div>
+  );
+}
+
+function ExtensionItem({
+  ext,
+  isInstalled,
+  onAction,
+}: {
+  ext: MarketplaceExtension;
+  isInstalled: boolean;
+  onAction: () => void;
+}) {
   const formatDownloads = (count: number): string => {
     if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
     if (count >= 1000) return `${(count / 1000).toFixed(0)}K`;
@@ -106,119 +209,60 @@ export function ExtensionPanel() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-zinc-900">
-      {/* Header */}
-      <div className="p-3 border-b border-zinc-800">
-        <h2 className="text-sm font-semibold text-zinc-100 mb-2">Extensions</h2>
-        <input
-          type="text"
-          placeholder="Search Extensions in Marketplace..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-2 py-1.5 bg-zinc-800 border border-zinc-700 rounded text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-blue-500"
-        />
-      </div>
+    <div className="group flex items-start gap-3 p-3 border-b border-sidebar-border hover:bg-sidebar-accent/30 transition-all cursor-default">
+      <Avatar className="h-10 w-10 rounded-md border border-border bg-muted">
+        <AvatarImage src={ext.icon} />
+        <AvatarFallback className="rounded-md text-muted-foreground font-bold">
+          {ext.displayName[0]}
+        </AvatarFallback>
+      </Avatar>
 
-      {/* Tabs */}
-      <div className="flex border-b border-zinc-800">
-        <button
-          onClick={() => setActiveTab("marketplace")}
-          className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-            activeTab === "marketplace"
-              ? "text-zinc-100 border-b-2 border-blue-500"
-              : "text-zinc-500 hover:text-zinc-300"
-          }`}
-        >
-          Marketplace
-        </button>
-        <button
-          onClick={() => setActiveTab("installed")}
-          className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-            activeTab === "installed"
-              ? "text-zinc-100 border-b-2 border-blue-500"
-              : "text-zinc-500 hover:text-zinc-300"
-          }`}
-        >
-          Installed ({extensions.length})
-        </button>
-      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-medium text-foreground truncate group-hover:text-blue-400 transition-colors">
+            {ext.displayName}
+          </h3>
+          <Button
+            size="sm"
+            variant={isInstalled ? "secondary" : "default"}
+            className="h-7 px-3 text-[10px] font-bold"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction();
+            }}
+          >
+            {isInstalled ? "Uninstall" : "Install"}
+          </Button>
+        </div>
 
-      {/* Extension List */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === "marketplace" ? (
-          filteredMarket.length === 0 ? (
-            <div className="p-4 text-center text-zinc-500 text-xs">
-              No extensions found matching "{searchQuery}"
-            </div>
-          ) : (
-            filteredMarket.map((ext) => (
-              <div
-                key={ext.name}
-                className="flex items-start gap-3 p-3 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
-              >
-                <div className="w-10 h-10 rounded bg-zinc-700 flex items-center justify-center text-lg font-bold text-zinc-300">
-                  {ext.displayName[0]}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-zinc-100 truncate">
-                      {ext.displayName}
-                    </h3>
-                    <button
-                      onClick={() =>
-                        ext.installed
-                          ? deactivateExtension(ext.name)
-                          : activateExtension(ext.name)
-                      }
-                      className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                        ext.installed
-                          ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
-                          : "bg-blue-600 text-white hover:bg-blue-700"
-                      }`}
-                    >
-                      {ext.installed ? "Uninstall" : "Install"}
-                    </button>
-                  </div>
-                  <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">
-                    {ext.description}
-                  </p>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-zinc-600">
-                    <span>{ext.publisher}</span>
-                    <span>⭐ {ext.rating}</span>
-                    <span>{formatDownloads(ext.downloads)} downloads</span>
-                  </div>
-                </div>
-              </div>
-            ))
-          )
-        ) : installedExtensions.length === 0 ? (
-          <div className="p-4 text-center text-zinc-500 text-xs">
-            No extensions installed
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
+          {ext.description}
+        </p>
+
+        <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
+          <span className="font-medium text-muted-foreground">
+            {ext.publisher}
+          </span>
+          <div className="flex items-center gap-1">
+            <StarIcon className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500" />
+            <span>{ext.rating}</span>
           </div>
-        ) : (
-          installedExtensions.map((ext) => (
-            <div
-              key={ext.name}
-              className="flex items-start gap-3 p-3 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
+          <div className="flex items-center gap-1">
+            <DownloadIcon className="h-2.5 w-2.5" />
+            <span>{formatDownloads(ext.downloads)}</span>
+          </div>
+          {isInstalled && (
+            <Badge
+              variant="outline"
+              className="h-4 px-1.5 py-0 text-[8px] border-green-500/50 text-green-500 bg-green-500/5 uppercase font-black"
             >
-              <div className="w-10 h-10 rounded bg-zinc-700 flex items-center justify-center text-lg font-bold text-zinc-300">
-                {ext.displayName[0]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-zinc-100 truncate">
-                    {ext.displayName}
-                  </h3>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-green-600/20 text-green-400">
-                    Installed
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500 mt-0.5">v{ext.version}</p>
-              </div>
-            </div>
-          ))
-        )}
+              Installed
+            </Badge>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
+export default ExtensionPanel;

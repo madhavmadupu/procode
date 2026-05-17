@@ -1,5 +1,16 @@
 import { useState } from "react";
 import { trpc } from "../../lib/trpc";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+  Button,
+  Input,
+  Label,
+} from "../ui";
 
 interface OpenFolderDialogProps {
   onOpen: (path: string) => void;
@@ -9,68 +20,81 @@ interface OpenFolderDialogProps {
 export function OpenFolderDialog({ onOpen, onClose }: OpenFolderDialogProps) {
   const [path, setPath] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!path.trim()) {
+    const trimmedPath = path.trim();
+    if (!trimmedPath) {
       setError("Please enter a folder path");
       return;
     }
 
+    setIsLoading(true);
     try {
-      const response = await trpc.fileSystem.openFolder(path.trim());
+      const response = await trpc.fileSystem.openFolder(trimmedPath);
 
       if (response.success) {
-        onOpen(path.trim());
+        onOpen(trimmedPath);
       } else {
         setError(response.error || "Failed to open folder");
       }
     } catch (err) {
       setError("Failed to connect to file system service");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-zinc-900 rounded-lg shadow-xl w-full max-w-md p-6 border border-zinc-800">
-        <h2 className="text-lg font-semibold mb-4">Open Folder</h2>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Open Folder</DialogTitle>
+          <DialogDescription>
+            Enter the path to your workspace folder
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="folder-path" className="block text-sm text-zinc-400 mb-2">
-              Folder Path
-            </label>
-            <input
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="folder-path">Workspace Path</Label>
+            <Input
               id="folder-path"
               type="text"
               value={path}
               onChange={(e) => setPath(e.target.value)}
-              placeholder="/path/to/your/project"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. C:\Users\Documents\Project"
+              className="bg-sidebar-accent/50 border-border"
               autoFocus
             />
-            {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+            {error && (
+              <p className="text-xs font-semibold text-red-500 bg-red-500/10 p-2 rounded border border-red-500/20">
+                {error}
+              </p>
+            )}
           </div>
 
-          <div className="flex justify-end space-x-3">
-            <button
+          <DialogFooter className="pt-4 flex gap-2 sm:justify-end">
+            <Button
               type="button"
+              variant="outline"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+              disabled={isLoading}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-medium transition-colors"
+              disabled={isLoading}
             >
-              Open
-            </button>
-          </div>
+              {isLoading ? "Opening..." : "Open Folder"}
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

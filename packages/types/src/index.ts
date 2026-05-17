@@ -14,7 +14,25 @@ export type {
   LogOptions,
   CommitOptions,
 } from "./git.js";
-export type { LSPConfig, Diagnostic, Completion } from "./lsp.js";
+export type {
+  LSPConfig,
+  Diagnostic,
+  Completion,
+  Position,
+  HoverResult,
+  DefinitionResult,
+  SymbolInfo,
+  SymbolKind,
+  WorkspaceSymbolResult,
+  RenameResult,
+  TextEdit,
+  CodeAction,
+  SignatureHelpResult,
+  InlayHintResult,
+  SemanticToken,
+  LspServerState,
+  LspStatus,
+} from "./lsp.js";
 export type { AgentTask, AgentRole, AgentMessage } from "./agent.js";
 export type { KnowledgeGraphNode, EdgeType, KnowledgeGraphEdge, KnowledgeGraph, GraphQuery } from "./graph.js";
 export type { Settings, SettingsScope, SettingsLayer, SettingsMerge } from "./settings.js";

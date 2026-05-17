@@ -3,6 +3,8 @@ import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { useTerminalStore } from "../../stores/terminal.store";
 import { trpc } from "../../lib/trpc";
+import { Button, ScrollArea } from "../ui";
+import { XIcon, PlusIcon } from "lucide-react";
 import "xterm/css/xterm.css";
 
 export function TerminalPanel() {
@@ -98,50 +100,51 @@ export function TerminalPanel() {
   );
 
   return (
-    <div className="h-full flex flex-col bg-zinc-950">
+    <div className="h-full flex flex-col bg-editor">
       {/* Terminal Tabs */}
-      <div className="flex items-center border-b border-zinc-800 bg-zinc-900">
-        <div className="flex-1 flex overflow-x-auto">
-          {sessions.map((session) => (
-            <button
-              key={session.id}
-              onClick={() => setActiveSession(session.id)}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs border-r border-zinc-800 transition-colors ${
-                activeSessionId === session.id
-                  ? "bg-zinc-800 text-zinc-100"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
-              }`}
-            >
-              <span className="truncate max-w-24">{session.name}</span>
-              <span
-                onClick={(e) => handleCloseTerminal(session.id, e)}
-                className="hover:text-zinc-100 cursor-pointer"
+      <div className="flex items-center border-b border-border bg-sidebar">
+        <ScrollArea className="flex-1">
+          <div className="flex items-center">
+            {sessions.map((session) => (
+              <button
+                key={session.id}
+                onClick={() => setActiveSession(session.id)}
+                className={`flex items-center gap-2 px-3 py-1.5 text-xs border-r border-border transition-colors ${
+                  activeSessionId === session.id
+                    ? "bg-sidebar-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50"
+                }`}
               >
-                ×
-              </span>
-            </button>
-          ))}
-        </div>
-        <button
+                <span className="truncate max-w-24">{session.name}</span>
+                <span
+                  onClick={(e) => handleCloseTerminal(session.id, e)}
+                  className="hover:text-foreground cursor-pointer"
+                >
+                  <XIcon className="w-3 h-3" />
+                </span>
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handleCreateTerminal}
           disabled={isCreating}
-          className="px-2 py-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors disabled:opacity-50"
+          className="h-8 w-8 rounded-none"
           title="New Terminal"
         >
-          +
-        </button>
+          <PlusIcon className="w-4 h-4" />
+        </Button>
       </div>
 
       {/* Terminal Content */}
       <div className="flex-1 overflow-hidden">
         {sessions.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <button
-              onClick={handleCreateTerminal}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition-colors"
-            >
+            <Button onClick={handleCreateTerminal}>
               Open Terminal
-            </button>
+            </Button>
           </div>
         ) : (
           <div ref={terminalRef} className="h-full" />

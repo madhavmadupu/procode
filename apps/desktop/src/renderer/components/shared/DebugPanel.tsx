@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useDapStore } from '../../stores/dap.store.js';
 import { PlayIcon, PauseIcon, StepOverIcon, StepIntoIcon, StepOutIcon, StopIcon, RestartIcon } from './icons.js';
+import { Button, Input, Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Badge, Separator, Label } from '../ui';
+import { cn } from '../../lib/utils';
 
 interface DebugPanelProps {
   onBreakpointToggle: (path: string, line: number) => void;
@@ -95,55 +97,61 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ onBreakpointToggle, brea
     setEvalResult(result.result);
   };
 
+  const stateColorMap = {
+    running: 'bg-green-500',
+    'stopped-debug': 'bg-yellow-500',
+    stopped: 'bg-yellow-500',
+    starting: 'bg-blue-500 animate-pulse',
+  };
+  const stateColor = stateColorMap[state as keyof typeof stateColorMap] || 'bg-muted-foreground';
+
   if (!isDebugging && state !== 'starting') {
     return (
       <div className="flex flex-col h-full p-4 gap-4">
-        <h3 className="text-sm font-semibold text-gray-200">Start Debugging</h3>
+        <h3 className="text-sm font-semibold text-foreground">Start Debugging</h3>
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Debug Adapter Path</label>
-            <input
-              type="text"
+            <Label className="text-xs text-muted-foreground mb-1 block">Debug Adapter Path</Label>
+            <Input
               value={adapterPath}
               onChange={e => setAdapterPath(e.target.value)}
               placeholder="/path/to/debug-adapter"
-              className="w-full px-2 py-1.5 text-xs bg-gray-800 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              className="text-xs bg-sidebar-accent/50 border-border"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Program Path</label>
-            <input
-              type="text"
+            <Label className="text-xs text-muted-foreground mb-1 block">Program Path</Label>
+            <Input
               value={programPath}
               onChange={e => setProgramPath(e.target.value)}
               placeholder="/path/to/program"
-              className="w-full px-2 py-1.5 text-xs bg-gray-800 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              className="text-xs bg-sidebar-accent/50 border-border"
             />
           </div>
 
-          <button
+          <Button
             onClick={handleStartDebug}
             disabled={!adapterPath || !programPath}
-            className="w-full px-3 py-2 text-xs font-medium bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:text-gray-400 text-white rounded flex items-center justify-center gap-2"
+            className="w-full"
           >
-            <PlayIcon className="w-4 h-4" />
+            <PlayIcon className="w-4 h-4 mr-2" />
             Start Debugging
-          </button>
+          </Button>
         </div>
 
         {/* Breakpoints list */}
         {breakpoints.size > 0 && (
           <div className="mt-4">
-            <h4 className="text-xs font-semibold text-gray-400 mb-2">Breakpoints</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground mb-2">Breakpoints</h4>
             <div className="space-y-1">
               {Array.from(breakpoints.entries()).map(([path, bps]) => (
                 <div key={path} className="text-xs">
-                  <div className="text-gray-400 truncate">{path.split('/').pop()}</div>
+                  <div className="text-muted-foreground truncate">{path.split('/').pop()}</div>
                   {bps.map((bp, i) => (
-                    <div key={i} className="flex items-center gap-2 pl-2 text-gray-500">
-                      <span className={`w-2 h-2 rounded-full ${bp.verified ? 'bg-red-500' : 'bg-gray-500'}`} />
+                    <div key={i} className="flex items-center gap-2 pl-2 text-muted-foreground/70">
+                      <span className={`w-2 h-2 rounded-full ${bp.verified ? 'bg-red-500' : 'bg-muted-foreground'}`} />
                       <span>Line {bp.line}</span>
                       {bp.condition && <span className="text-yellow-500">({bp.condition})</span>}
                     </div>
@@ -160,161 +168,123 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ onBreakpointToggle, brea
   return (
     <div className="flex flex-col h-full">
       {/* Debug toolbar */}
-      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-gray-700 bg-gray-800">
-        <button
-          onClick={handleContinue}
-          disabled={state !== 'stopped-debug'}
-          className="p-1.5 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Continue (F5)"
-        >
-          <PlayIcon className="w-4 h-4 text-gray-300" />
-        </button>
-        <button
-          onClick={handlePause}
-          disabled={state !== 'running'}
-          className="p-1.5 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Pause (F6)"
-        >
-          <PauseIcon className="w-4 h-4 text-gray-300" />
-        </button>
-        <button
-          onClick={handleStopDebug}
-          className="p-1.5 rounded hover:bg-gray-700"
-          title="Stop (Shift+F5)"
-        >
-          <StopIcon className="w-4 h-4 text-red-400" />
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={state !== 'stopped-debug'}
-          className="p-1.5 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Step Over (F10)"
-        >
-          <StepOverIcon className="w-4 h-4 text-gray-300" />
-        </button>
-        <button
-          onClick={handleStepIn}
-          disabled={state !== 'stopped-debug'}
-          className="p-1.5 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Step Into (F11)"
-        >
-          <StepIntoIcon className="w-4 h-4 text-gray-300" />
-        </button>
-        <button
-          onClick={handleStepOut}
-          disabled={state !== 'stopped-debug'}
-          className="p-1.5 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Step Out (Shift+F11)"
-        >
-          <StepOutIcon className="w-4 h-4 text-gray-300" />
-        </button>
+      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-sidebar-border bg-sidebar-accent/30">
+        <Button variant="ghost" size="icon" onClick={handleContinue} disabled={state !== 'stopped-debug'} className="h-7 w-7" title="Continue (F5)">
+          <PlayIcon className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={handlePause} disabled={state !== 'running'} className="h-7 w-7" title="Pause (F6)">
+          <PauseIcon className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={handleStopDebug} className="h-7 w-7 text-red-400" title="Stop (Shift+F5)">
+          <StopIcon className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={handleNext} disabled={state !== 'stopped-debug'} className="h-7 w-7" title="Step Over (F10)">
+          <StepOverIcon className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={handleStepIn} disabled={state !== 'stopped-debug'} className="h-7 w-7" title="Step Into (F11)">
+          <StepIntoIcon className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={handleStepOut} disabled={state !== 'stopped-debug'} className="h-7 w-7" title="Step Out (Shift+F11)">
+          <StepOutIcon className="w-4 h-4" />
+        </Button>
         <div className="ml-auto flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${
-            state === 'running' ? 'bg-green-500' :
-            state === 'stopped-debug' ? 'bg-yellow-500' :
-            state === 'starting' ? 'bg-blue-500 animate-pulse' :
-            'bg-gray-500'
-          }`} />
-          <span className="text-xs text-gray-400">{state}</span>
+          <span className={cn("w-2 h-2 rounded-full", stateColor)} />
+          <span className="text-xs text-muted-foreground">{state}</span>
         </div>
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center border-b border-gray-700">
-        {(['variables', 'callstack', 'output'] as const).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1.5 text-xs ${
-              activeTab === tab
-                ? 'text-white border-b-2 border-blue-500'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col">
+        <div className="px-2 border-b border-sidebar-border">
+          <TabsList className="grid w-full grid-cols-3 h-8">
+            <TabsTrigger value="variables" className="text-xs">Variables</TabsTrigger>
+            <TabsTrigger value="callstack" className="text-xs">Call Stack</TabsTrigger>
+            <TabsTrigger value="output" className="text-xs">Output</TabsTrigger>
+          </TabsList>
+        </div>
 
-      {/* Tab content */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === 'variables' && (
-          <div className="p-2">
-            {scopes.length === 0 ? (
-              <div className="text-xs text-gray-500 text-center py-4">No variables available</div>
-            ) : (
-              scopes.map(scope => (
-                <div key={scope.name} className="mb-2">
-                  <button
-                    onClick={() => handleScopeToggle(scope.variablesReference)}
-                    className="flex items-center gap-1 w-full text-xs font-semibold text-gray-300 hover:text-white"
-                  >
-                    <span className={`transform transition-transform ${expandedScopes.has(scope.variablesReference) ? 'rotate-90' : ''}`}>
-                      ▶
-                    </span>
-                    {scope.name}
-                  </button>
-                  {expandedScopes.has(scope.variablesReference) && (
-                    <div className="pl-4 mt-1">
-                      {(variables.get(scope.variablesReference) ?? []).map((v, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs py-0.5">
-                          <span className="text-blue-400">{v.name}</span>
-                          <span className="text-gray-500">:</span>
-                          <span className="text-green-400 truncate">{v.value}</span>
-                          {v.type && <span className="text-gray-500 text-[10px]">{v.type}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'callstack' && (
-          <div className="p-2">
-            {stackFrames.length === 0 ? (
-              <div className="text-xs text-gray-500 text-center py-4">No stack frames</div>
-            ) : (
-              <div className="space-y-0.5">
-                {stackFrames.map(frame => (
-                  <button
-                    key={frame.id}
-                    onClick={() => handleFrameSelect(frame.id)}
-                    className={`w-full text-left px-2 py-1 text-xs rounded ${
-                      selectedFrameId === frame.id
-                        ? 'bg-blue-600/30 text-white'
-                        : 'text-gray-300 hover:bg-gray-700/50'
-                    }`}
-                  >
-                    <div className="font-medium">{frame.name}</div>
-                    {frame.source?.path && (
-                      <div className="text-gray-500 truncate">
-                        {frame.source.path.split('/').pop()}:{frame.line}
+        <ScrollArea className="flex-1">
+          {/* Variables Tab */}
+          <TabsContent value="variables" className="m-0 p-0">
+            <div className="p-2">
+              {scopes.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-4">No variables available</div>
+              ) : (
+                scopes.map(scope => (
+                  <div key={scope.name} className="mb-2">
+                    <Button
+                      variant="ghost"
+                      size="compact"
+                      onClick={() => handleScopeToggle(scope.variablesReference)}
+                      className="w-full justify-start text-xs font-semibold"
+                    >
+                      <span className={cn("mr-1 transform transition-transform", expandedScopes.has(scope.variablesReference) ? 'rotate-90' : '')}>
+                        ▶
+                      </span>
+                      {scope.name}
+                    </Button>
+                    {expandedScopes.has(scope.variablesReference) && (
+                      <div className="pl-4 mt-1">
+                        {(variables.get(scope.variablesReference) ?? []).map((v, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs py-0.5">
+                            <span className="text-blue-400">{v.name}</span>
+                            <span className="text-muted-foreground">:</span>
+                            <span className="text-green-400 truncate">{v.value}</span>
+                            {v.type && <span className="text-muted-foreground/60 text-[10px]">{v.type}</span>}
+                          </div>
+                        ))}
                       </div>
                     )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                  </div>
+                ))
+              )}
+            </div>
+          </TabsContent>
 
-        {activeTab === 'output' && (
-          <div className="flex flex-col h-full">
+          {/* Call Stack Tab */}
+          <TabsContent value="callstack" className="m-0 p-0">
+            <div className="p-2">
+              {stackFrames.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-4">No stack frames</div>
+              ) : (
+                <div className="space-y-0.5">
+                  {stackFrames.map(frame => (
+                    <Button
+                      key={frame.id}
+                      variant={selectedFrameId === frame.id ? "secondary" : "ghost"}
+                      size="compact"
+                      onClick={() => handleFrameSelect(frame.id)}
+                      className="w-full justify-start text-xs"
+                    >
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{frame.name}</span>
+                        {frame.source?.path && (
+                          <span className="text-muted-foreground truncate text-[10px]">
+                            {frame.source.path.split('/').pop()}:{frame.line}
+                          </span>
+                        )}
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Output Tab */}
+          <TabsContent value="output" className="m-0 p-0 flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-2 font-mono text-xs">
               {output.length === 0 ? (
-                <div className="text-gray-500 text-center py-4">No output</div>
+                <div className="text-muted-foreground text-center py-4">No output</div>
               ) : (
                 output.map((line, i) => (
                   <div
                     key={i}
-                    className={`${
-                      line.category === 'stderr' ? 'text-red-400' :
-                      line.category === 'stdout' ? 'text-gray-200' :
-                      'text-gray-400'
-                    }`}
+                    className={cn(
+                      line.category === 'stderr' && 'text-red-400',
+                      line.category === 'stdout' && 'text-foreground',
+                      !line.category && 'text-muted-foreground'
+                    )}
                   >
                     {line.output}
                   </div>
@@ -322,10 +292,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ onBreakpointToggle, brea
               )}
             </div>
             {/* Debug console input */}
-            <div className="flex items-center gap-2 p-2 border-t border-gray-700">
-              <span className="text-gray-500 text-xs">{'>'}</span>
-              <input
-                type="text"
+            <div className="flex items-center gap-2 p-2 border-t border-sidebar-border">
+              <span className="text-muted-foreground text-xs">{'>'}</span>
+              <Input
                 value={evalExpression}
                 onChange={e => setEvalExpression(e.target.value)}
                 onKeyDown={e => {
@@ -334,23 +303,20 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ onBreakpointToggle, brea
                   }
                 }}
                 placeholder="Evaluate expression..."
-                className="flex-1 px-2 py-1 text-xs bg-gray-800 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                className="flex-1 text-xs bg-sidebar-accent/50 border-border"
               />
-              <button
-                onClick={handleEvaluate}
-                className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded"
-              >
+              <Button onClick={handleEvaluate} size="compact">
                 Run
-              </button>
+              </Button>
             </div>
             {evalResult && (
-              <div className="px-2 py-1 text-xs text-green-400 border-t border-gray-700">
+              <div className="px-2 py-1 text-xs text-green-400 border-t border-sidebar-border">
                 {evalResult}
               </div>
             )}
-          </div>
-        )}
-      </div>
+          </TabsContent>
+        </ScrollArea>
+      </Tabs>
     </div>
   );
 };

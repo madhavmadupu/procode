@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Diagnostic, HoverResult, DefinitionResult, SymbolInfo, WorkspaceSymbolResult, Completion, LspServerState } from '@procode/types';
-import { trpcCall } from '../lib/trpc.js';
+import type { Diagnostic, HoverResult, DefinitionResult, SymbolInfo, WorkspaceSymbolResult, Completion, LspServerState, RenameResult, SignatureHelpResult } from '@procode/types';
+import { trpc } from '../lib/trpc';
 
 interface LspStore {
   // Server state
@@ -36,14 +36,14 @@ interface LspStore {
 
   getCompletions: (uri: string, line: number, character: number, triggerKind?: number, triggerCharacter?: string) => Promise<void>;
   getHover: (uri: string, line: number, character: number) => Promise<void>;
-  getDefinition: (uri: string, line: number, character: number) => Promise<DefinitionResult | null>;
+  getDefinition: (uri: string, line: number, character: number) => Promise<DefinitionResult | DefinitionResult[] | null>;
   getReferences: (uri: string, line: number, character: number, includeDeclaration?: boolean) => Promise<DefinitionResult[] | null>;
   getDocumentSymbols: (uri: string) => Promise<SymbolInfo[] | null>;
   searchWorkspaceSymbols: (query: string) => Promise<void>;
-  rename: (uri: string, line: number, character: number, newName: string) => Promise<{ changes: { [uri: string]: { range: { start: { line: number; character: number }; end: { line: number; character: number } }; newText: string }[] } } | null>;
-  getSignatureHelp: (uri: string, line: number, character: number) => Promise<{ signatures: { label: string; documentation?: string; parameters?: { label: string; documentation?: string }[] }[]; activeSignature?: number; activeParameter?: number } | null>;
-  getCodeActions: (uri: string, startLine: number, startCharacter: number, endLine: number, endCharacter: number, diagnostics?: Diagnostic[]) => Promise<{ title: string; kind?: string; edit?: { changes: { [uri: string]: { range: { start: { line: number; character: number }; end: { line: number; character: number } }; newText: string }[] } }; command?: { title: string; command: string; arguments?: unknown[] } }[] | null>;
-  formatDocument: (uri: string, tabSize?: number, insertSpaces?: boolean) => Promise<{ range: { start: { line: number; character: number }; end: { line: number; character: number } }; newText: string }[] | null>;
+  rename: (uri: string, line: number, character: number, newName: string) => Promise<RenameResult | null>;
+  getSignatureHelp: (uri: string, line: number, character: number) => Promise<SignatureHelpResult | null>;
+  getCodeActions: (uri: string, startLine: number, startCharacter: number, endLine: number, endCharacter: number, diagnostics?: Diagnostic[]) => Promise<any[] | null>;
+  formatDocument: (uri: string, tabSize?: number, insertSpaces?: boolean) => Promise<any[] | null>;
 
   clearHover: () => void;
   clearCompletions: () => void;
@@ -65,75 +65,63 @@ export const useLspStore = create<LspStore>((set, get) => ({
 
   // Server actions
   startServer: async (serverId: string, rootPath: string) => {
-    await trpcCall('lsp', 'startServer', { serverId, rootPath }, 'mutation');
+    await trpc.lsp.startServer({ serverId, rootPath });
     await get().refreshServerStates();
   },
 
   stopServer: async (serverId: string) => {
-    await trpcCall('lsp', 'stopServer', { serverId }, 'mutation');
+    await trpc.lsp.stopServer({ serverId });
     await get().refreshServerStates();
   },
 
   stopAllServers: async () => {
-    await trpcCall('lsp', 'stopAll', {}, 'mutation');
+    await trpc.lsp.stopAll();
     set({ servers: [] });
   },
 
   refreshServerStates: async () => {
-    const result = await trpcCall('lsp', 'getServerStates', {}, 'query');
-    set({ servers: result.servers ?? [] });
+    const servers = await trpc.lsp.getServerStates();
+    set({ servers: servers as LspServerState[] });
   },
 
   // Document lifecycle
   documentDidOpen: async (uri: string, languageId: string, version: number, text: string) => {
-    await trpcCall('lsp', 'didOpen', { uri, languageId, version, text }, 'mutation');
+    await trpc.lsp.didOpen({ uri, languageId, version, text });
   },
 
   documentDidChange: async (uri: string, version: number, changes: { range?: { start: { line: number; character: number }; end: { line: number; character: number } }; text: string }[]) => {
-    await trpcCall('lsp', 'didChange', { uri, version, changes }, 'mutation');
+    await trpc.lsp.didChange({ uri, version, changes });
   },
 
   documentDidClose: async (uri: string) => {
-    await trpcCall('lsp', 'didClose', { uri }, 'mutation');
+    await trpc.lsp.didClose({ uri });
   },
 
   documentDidSave: async (uri: string, text?: string) => {
-    await trpcCall('lsp', 'didSave', { uri, text }, 'mutation');
+    await trpc.lsp.didSave({ uri, text });
   },
 
   // LSP operations
   getCompletions: async (uri: string, line: number, character: number, triggerKind?: number, triggerCharacter?: string) => {
     set({ isCompleting: true });
-    const result = await trpcCall('lsp', 'completion', { uri, line, character, triggerKind, triggerCharacter }, 'query');
-    set({
-      completions: result.items?.map((item: any) => ({
-        label: item.label,
-        kind: item.kind ?? 1,
-        detail: item.detail,
-        documentation: typeof item.documentation === 'string' ? item.documentation : item.documentation?.value,
-        insertText: item.insertText ?? item.label,
-        range: item.textEdit ? { start: item.textEdit.range.start, end: item.textEdit.range.end } : undefined,
-      })) ?? [],
-      completionPosition: { line, character },
-      isCompleting: false,
-    });
+    try {
+      const completions = await trpc.lsp.completion({ uri, line, character, triggerKind, triggerCharacter });
+      set({
+        completions,
+        completionPosition: { line, character },
+        isCompleting: false,
+      });
+    } catch (error) {
+      console.error('Failed to get completions:', error);
+      set({ isCompleting: false });
+    }
   },
 
   getHover: async (uri: string, line: number, character: number) => {
-    const result = await trpcCall('lsp', 'hover', { uri, line, character }, 'query');
+    const result = await trpc.lsp.hover({ uri, line, character });
     if (result) {
-      const contents = result.contents;
-      let content = '';
-      if (typeof contents === 'string') {
-        content = contents;
-      } else if (Array.isArray(contents)) {
-        content = contents.map(c => typeof c === 'string' ? c : c.value).join('\n');
-      } else {
-        content = contents.value;
-      }
-
       set({
-        hover: { contents: [content], range: result.range },
+        hover: result,
         hoverPosition: { line, character },
       });
     } else {
@@ -142,119 +130,52 @@ export const useLspStore = create<LspStore>((set, get) => ({
   },
 
   getDefinition: async (uri: string, line: number, character: number) => {
-    const result = await trpcCall('lsp', 'definition', { uri, line, character }, 'query');
-    if (result) {
-      if (Array.isArray(result)) {
-        return result.map((loc: any) => ({
-          uri: loc.uri,
-          range: loc.range,
-        }));
-      } else {
-        return {
-          uri: result.uri,
-          range: result.range,
-        };
-      }
-    }
-    return null;
+    return await trpc.lsp.definition({ uri, line, character });
   },
 
   getReferences: async (uri: string, line: number, character: number, includeDeclaration = true) => {
-    const result = await trpcCall('lsp', 'references', { uri, line, character, includeDeclaration }, 'query');
-    if (result) {
-      return result.map((loc: any) => ({
-        uri: loc.uri,
-        range: loc.range,
-      }));
-    }
-    return null;
+    return await trpc.lsp.references({ uri, line, character, includeDeclaration });
   },
 
   getDocumentSymbols: async (uri: string) => {
-    const result = await trpcCall('lsp', 'documentSymbols', { uri }, 'query');
-    if (result) {
-      return result.map((symbol: any) => ({
-        name: symbol.name,
-        kind: symbol.kind,
-        uri,
-        range: symbol.range,
-        selectionRange: symbol.selectionRange,
-        children: symbol.children,
-      }));
-    }
-    return null;
+    return await trpc.lsp.documentSymbols({ uri });
   },
 
   searchWorkspaceSymbols: async (query: string) => {
     set({ isSearchingSymbols: true });
-    const result = await trpcCall('lsp', 'workspaceSymbols', { query }, 'query');
-    if (result) {
+    try {
+      const workspaceSymbols = await trpc.lsp.workspaceSymbols({ query });
       set({
-        workspaceSymbols: result.map((symbol: any) => ({
-          name: symbol.name,
-          kind: symbol.kind,
-          uri: symbol.location.uri,
-          location: symbol.location.range,
-        })),
+        workspaceSymbols,
         isSearchingSymbols: false,
       });
-    } else {
+    } catch (error) {
+      console.error('Failed to search workspace symbols:', error);
       set({ workspaceSymbols: [], isSearchingSymbols: false });
     }
   },
 
   rename: async (uri: string, line: number, character: number, newName: string) => {
-    const result = await trpcCall('lsp', 'rename', { uri, line, character, newName }, 'mutation');
-    if (result?.changes) {
-      return {
-        changes: Object.fromEntries(
-          Object.entries(result.changes).map(([uri, edits]) => [
-            uri,
-            (edits as any[]).map((edit: any) => ({
-              range: edit.range,
-              newText: edit.newText,
-            })),
-          ])
-        ),
-      };
-    }
-    return null;
+    return await trpc.lsp.rename({ uri, line, character, newName });
   },
 
   getSignatureHelp: async (uri: string, line: number, character: number) => {
-    const result = await trpcCall('lsp', 'signatureHelp', { uri, line, character }, 'query');
-    if (result) {
-      return {
-        signatures: result.signatures.map((sig: any) => ({
-          label: sig.label,
-          documentation: typeof sig.documentation === 'string' ? sig.documentation : sig.documentation?.value,
-          parameters: sig.parameters?.map((p: any) => ({
-            label: p.label,
-            documentation: typeof p.documentation === 'string' ? p.documentation : p.documentation?.value,
-          })),
-        })),
-        activeSignature: result.activeSignature,
-        activeParameter: result.activeParameter,
-      };
-    }
-    return null;
+    return await trpc.lsp.signatureHelp({ uri, line, character });
   },
 
   getCodeActions: async (uri: string, startLine: number, startCharacter: number, endLine: number, endCharacter: number, diagnostics?: Diagnostic[]) => {
-    const result = await trpcCall('lsp', 'codeAction', {
+    return await trpc.lsp.codeAction({
       uri,
       startLine,
       startCharacter,
       endLine,
       endCharacter,
       diagnostics,
-    }, 'query');
-    return result;
+    });
   },
 
   formatDocument: async (uri: string, tabSize = 2, insertSpaces = true) => {
-    const result = await trpcCall('lsp', 'formatting', { uri, tabSize, insertSpaces }, 'mutation');
-    return result;
+    return await trpc.lsp.formatting({ uri, tabSize, insertSpaces });
   },
 
   // Clear actions

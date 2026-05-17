@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { CheckIcon, XIcon, CheckCircleIcon, XCircleIcon, ChevronRightIcon } from './icons.js';
+import { Button, ScrollArea, Badge, Separator } from '../ui';
+import { cn } from '../../lib/utils';
 
 interface DiffHunk {
   id: string;
@@ -46,64 +48,63 @@ export const HitlApprovalPanel: React.FC<HitlApprovalProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900 text-zinc-100">
-      <div className="px-4 py-3 border-b border-zinc-800">
+    <div className="flex flex-col h-full bg-sidebar">
+      <div className="px-4 py-3 border-b border-sidebar-border">
         <h3 className="text-sm font-medium mb-1">Review Changes</h3>
-        <p className="text-xs text-zinc-500">Task: {taskId}</p>
+        <p className="text-xs text-muted-foreground">Task: {taskId}</p>
         <div className="flex gap-2 mt-3">
-          <button
-            onClick={onApproveAll}
-            className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs font-medium"
-          >
-            <CheckCircleIcon className="w-3 h-3" />
+          <Button onClick={onApproveAll} size="compact" className="bg-green-600 hover:bg-green-700">
+            <CheckCircleIcon className="w-3 h-3 mr-1" />
             Accept All
-          </button>
-          <button
-            onClick={onRejectAll}
-            className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded text-xs font-medium"
-          >
-            <XCircleIcon className="w-3 h-3" />
+          </Button>
+          <Button onClick={onRejectAll} size="compact" variant="destructive">
+            <XCircleIcon className="w-3 h-3 mr-1" />
             Reject All
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <ScrollArea className="flex-1">
         {diffs.map((diff) => (
-          <div key={diff.path} className="border-b border-zinc-800">
+          <div key={diff.path} className="border-b border-sidebar-border">
             <div
-              className="flex items-center justify-between px-4 py-2 hover:bg-zinc-800/50 cursor-pointer"
+              className="flex items-center justify-between px-4 py-2 hover:bg-sidebar-accent/50 cursor-pointer"
               onClick={() => toggleFile(diff.path)}
             >
               <div className="flex items-center gap-2">
                 <ChevronRightIcon
-                  className={`w-3 h-3 transition-transform ${
-                    expandedFiles.has(diff.path) ? 'rotate-90' : ''
-                  }`}
+                  className={cn(
+                    "w-3 h-3 transition-transform",
+                    expandedFiles.has(diff.path) && 'rotate-90'
+                  )}
                 />
-                <span className="text-xs font-mono text-zinc-300">{diff.path}</span>
+                <span className="text-xs font-mono text-foreground">{diff.path}</span>
               </div>
               <div className="flex gap-1">
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     onApprove(diff.path);
                   }}
-                  className="p-1 hover:bg-green-900/50 rounded"
+                  className="h-6 w-6 hover:bg-green-900/50"
                   title="Accept file"
                 >
                   <CheckIcon className="w-3 h-3 text-green-400" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     onReject(diff.path);
                   }}
-                  className="p-1 hover:bg-red-900/50 rounded"
+                  className="h-6 w-6 hover:bg-red-900/50"
                   title="Reject file"
                 >
                   <XIcon className="w-3 h-3 text-red-400" />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -112,28 +113,28 @@ export const HitlApprovalPanel: React.FC<HitlApprovalProps> = ({
                 {diff.hunks.map((hunk) => (
                   <div key={hunk.id} className="mb-3">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-mono text-zinc-500">{hunk.header}</span>
-                      <button
+                      <span className="text-xs font-mono text-muted-foreground">{hunk.header}</span>
+                      <Button
+                        variant="outline"
+                        size="compact"
                         onClick={() => onApproveHunk(hunk.id)}
-                        className="px-2 py-0.5 bg-zinc-700 hover:bg-zinc-600 rounded text-xs"
                       >
                         Accept Hunk
-                      </button>
+                      </Button>
                     </div>
-                    <div className="bg-zinc-950 rounded border border-zinc-800 overflow-auto max-h-64">
+                    <div className="bg-editor rounded border border-sidebar-border overflow-auto max-h-64">
                       <pre className="text-xs font-mono">
                         {hunk.lines.map((line, index) => (
                           <div
                             key={index}
-                            className={`px-2 py-0.5 ${
-                              line.type === 'added'
-                                ? 'bg-green-900/20 text-green-300'
-                                : line.type === 'removed'
-                                ? 'bg-red-900/20 text-red-300'
-                                : 'text-zinc-400'
-                            }`}
+                            className={cn(
+                              "px-2 py-0.5",
+                              line.type === 'added' && 'bg-green-900/20 text-green-300',
+                              line.type === 'removed' && 'bg-red-900/20 text-red-300',
+                              line.type === 'context' && 'text-muted-foreground'
+                            )}
                           >
-                            <span className="inline-block w-8 text-zinc-600 select-none">
+                            <span className="inline-block w-8 text-muted-foreground/40 select-none">
                               {line.lineNum}
                             </span>
                             <span className="ml-2">
@@ -150,7 +151,7 @@ export const HitlApprovalPanel: React.FC<HitlApprovalProps> = ({
             )}
           </div>
         ))}
-      </div>
+      </ScrollArea>
     </div>
   );
 };

@@ -97,10 +97,12 @@ export function useLspIntegration(editor: monaco.editor.IStandaloneCodeEditor | 
         await lspStore.getHover(uri, position.lineNumber - 1, position.column - 1);
 
         if (lspStore.hover) {
+          const contents = Array.isArray(lspStore.hover.contents)
+            ? lspStore.hover.contents.join("\n")
+            : lspStore.hover.contents;
+
           return {
-            contents: [
-              { value: lspStore.hover.contents.join('\n') },
-            ],
+            contents: [{ value: contents }],
             range: lspStore.hover.range
               ? new monaco.Range(
                   lspStore.hover.range.start.line + 1,
@@ -203,7 +205,7 @@ export function useLspIntegration(editor: monaco.editor.IStandaloneCodeEditor | 
             for (const edit of fileEdits) {
               edits.edits.push({
                 resource: monaco.Uri.parse(uri),
-                edit: {
+                textEdit: {
                   range: new monaco.Range(
                     edit.range.start.line + 1,
                     edit.range.start.character + 1,
@@ -212,7 +214,8 @@ export function useLspIntegration(editor: monaco.editor.IStandaloneCodeEditor | 
                   ),
                   text: edit.newText,
                 },
-              });
+                versionId: undefined,
+              } as monaco.languages.IWorkspaceTextEdit);
             }
           }
           return edits;

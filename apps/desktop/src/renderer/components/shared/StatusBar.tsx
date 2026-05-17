@@ -5,6 +5,15 @@ import { useEditorStore } from "../../stores/editor";
 import { useGitStore } from "../../stores/git.store";
 import { BranchIcon } from "./icons";
 import { BranchPicker } from "./BranchPicker";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  Button,
+  Separator,
+  Badge,
+} from "../ui";
+import { cn } from "../../lib/utils";
 
 export function StatusBar() {
   const { activeTabId, tabs } = useTabsStore();
@@ -25,75 +34,115 @@ export function StatusBar() {
   const hasConflicts = status?.hasConflicts;
 
   return (
-    <footer className="h-6 flex items-center justify-between px-3 bg-blue-600 text-white text-xs select-none relative">
-      <div className="flex items-center space-x-3">
+    <footer className="h-6 flex items-center justify-between px-3 bg-statusBar text-status-bar-foreground text-[11px] select-none relative z-statusBar">
+      <div className="flex items-center gap-3">
         {rootPath && (
-          <span className="flex items-center space-x-1">
-            <span className={state === "ready" ? "text-green-300" : state === "indexing" ? "text-yellow-300" : ""}>
-              {state === "ready" ? "✓" : state === "indexing" ? "⟳" : "○"}
-            </span>
-            <span>{state === "ready" ? "Ready" : state === "indexing" ? "Indexing..." : "Idle"}</span>
-          </span>
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 cursor-help">
+                <span className="relative flex h-2 w-2">
+                  {state === "indexing" && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                  )}
+                  <span
+                    className={cn(
+                      "relative inline-flex rounded-full h-2 w-2",
+                      state === "ready" && "bg-green-500",
+                      state === "indexing" && "bg-yellow-500",
+                      state === "idle" && "bg-muted-foreground"
+                    )}
+                  ></span>
+                </span>
+                <span className="font-bold uppercase tracking-tighter">
+                  {state === "ready" ? "Ready" : state === "indexing" ? "Indexing" : "Idle"}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px]">
+              <p>Workspace Index Status: {state}</p>
+            </TooltipContent>
+          </Tooltip>
         )}
-        <button
-          className="hover:bg-blue-700 px-1.5 py-0.5 rounded transition-colors"
-          onClick={() => useEditorStore.getState().toggleSidebar()}
-        >
-          {isSidebarOpen ? "Sidebar" : "Explorer"}
-        </button>
-        <button
-          className="hover:bg-blue-700 px-1.5 py-0.5 rounded transition-colors"
-          onClick={() => useEditorStore.getState().toggleTerminal()}
-        >
-          Terminal
-        </button>
+
+        <Separator orientation="vertical" className="h-3 bg-white/20" />
+
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="compact"
+            onClick={() => useEditorStore.getState().toggleSidebar()}
+            className="h-5 px-1.5 text-[11px] hover:bg-white/10 font-medium"
+          >
+            {isSidebarOpen ? "Sidebar" : "Explorer"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="compact"
+            onClick={() => useEditorStore.getState().toggleTerminal()}
+            className="h-5 px-1.5 text-[11px] hover:bg-white/10 font-medium"
+          >
+            Terminal
+          </Button>
+        </div>
       </div>
 
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center gap-3">
         {activeTab && (
           <>
-            <span className="hover:bg-blue-700 px-1.5 py-0.5 rounded cursor-pointer">
-              Ln 1, Col 1
-            </span>
-            <span className="hover:bg-blue-700 px-1.5 py-0.5 rounded cursor-pointer">
-              Spaces: {config.tabSize}
-            </span>
-            <span className="hover:bg-blue-700 px-1.5 py-0.5 rounded cursor-pointer">
-              UTF-8
-            </span>
-            <span className="hover:bg-blue-700 px-1.5 py-0.5 rounded cursor-pointer">
-              LF
-            </span>
-            <span className="hover:bg-blue-700 px-1.5 py-0.5 rounded cursor-pointer">
-              {activeTab.languageId || "plaintext"}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="hover:bg-white/10 px-1 rounded cursor-pointer transition-colors">
+                Ln 1, Col 1
+              </span>
+              <span className="hover:bg-white/10 px-1 rounded cursor-pointer transition-colors">
+                Spaces: {config.tabSize}
+              </span>
+              <span className="hover:bg-white/10 px-1 rounded cursor-pointer transition-colors">
+                UTF-8
+              </span>
+              <span className="hover:bg-white/10 px-1 rounded cursor-pointer transition-colors uppercase font-bold text-[10px]">
+                {useTabsStore.getState().documents.get(activeTab.path)?.languageId || "plaintext"}
+              </span>
+            </div>
+            <Separator orientation="vertical" className="h-3 bg-white/20" />
           </>
         )}
 
         {/* Git branch with status indicators */}
         {rootPath && currentBranch && (
-          <button
-            className="hover:bg-blue-700 px-1.5 py-0.5 rounded cursor-pointer flex items-center gap-1"
-            onClick={() => setShowBranchPicker(!showBranchPicker)}
-          >
-            <BranchIcon className="w-3 h-3" />
-            <span>{currentBranch}</span>
-            {hasConflicts && (
-              <span className="text-red-300">✗</span>
-            )}
-            {hasChanges && !hasConflicts && (
-              <span className="text-yellow-300">●</span>
-            )}
-            {status && (status.ahead > 0 || status.behind > 0) && (
-              <span className="text-zinc-300">
-                {status.ahead > 0 && `↑${status.ahead}`}
-                {status.behind > 0 && `↓${status.behind}`}
-              </span>
-            )}
-          </button>
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <button
+                className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer flex items-center gap-1.5 transition-colors group"
+                onClick={() => setShowBranchPicker(!showBranchPicker)}
+              >
+                <BranchIcon className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+                <span className="font-bold">{currentBranch}</span>
+                <div className="flex items-center gap-0.5">
+                  {hasConflicts && <span className="text-red-400 animate-pulse font-black">!</span>}
+                  {hasChanges && !hasConflicts && (
+                    <span className="text-white/60">●</span>
+                  )}
+                </div>
+                {status && (status.ahead > 0 || status.behind > 0) && (
+                  <Badge
+                    variant="outline"
+                    className="h-3.5 px-1 py-0 text-[8px] border-white/30 bg-white/10 font-black"
+                  >
+                    {status.ahead > 0 && `↑${status.ahead}`}
+                    {status.behind > 0 && `↓${status.behind}`}
+                  </Badge>
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px]">
+              <p>Git Branch: {currentBranch}</p>
+              {status && <p className="opacity-70 mt-1">{status.files.length} files changed</p>}
+            </TooltipContent>
+          </Tooltip>
         )}
 
-        <span className="font-medium">ProCode</span>
+        <Separator orientation="vertical" className="h-3 bg-white/20" />
+        <span className="font-black tracking-tighter opacity-50">PROCODE</span>
       </div>
 
       {/* Branch picker */}

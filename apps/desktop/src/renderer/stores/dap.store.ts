@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { trpcCall } from '../lib/trpc.js';
+import { trpc } from '../lib/trpc';
 
 interface DebugThread {
   id: number;
@@ -28,14 +28,6 @@ interface Variable {
   variablesReference: number;
   namedVariables?: number;
   indexedVariables?: number;
-}
-
-interface Breakpoint {
-  id?: number;
-  verified: boolean;
-  message?: string;
-  line?: number;
-  column?: number;
 }
 
 interface DapStore {
@@ -110,13 +102,13 @@ export const useDapStore = create<DapStore>((set, get) => ({
   // Session actions
   startSession: async (adapterPath: string, config) => {
     set({ state: 'starting' });
-    await trpcCall('dap', 'startSession', { adapterPath, config }, 'mutation');
+    await trpc.dap.startSession({ adapterPath, config });
     await get().refreshState();
     await get().getThreads();
   },
 
   stopSession: async () => {
-    await trpcCall('dap', 'stopSession', {}, 'mutation');
+    await trpc.dap.stopSession();
     set({
       state: 'stopped',
       isDebugging: false,
@@ -130,7 +122,7 @@ export const useDapStore = create<DapStore>((set, get) => ({
   },
 
   refreshState: async () => {
-    const result = await trpcCall('dap', 'getState', {}, 'query');
+    const result = await trpc.dap.getState();
     set({
       state: result.state,
       isDebugging: result.state === 'running' || result.state === 'stopped-debug',
@@ -139,17 +131,17 @@ export const useDapStore = create<DapStore>((set, get) => ({
 
   // Breakpoint actions
   setBreakpoints: async (path: string, breakpoints) => {
-    const result = await trpcCall('dap', 'setBreakpoints', { path, breakpoints }, 'mutation');
+    const result = await trpc.dap.setBreakpoints({ path, breakpoints });
     const newBreakpoints = new Map(get().breakpoints);
     newBreakpoints.set(path, breakpoints.map((bp, i) => ({
       ...bp,
-      verified: result.breakpoints[i]?.verified ?? false,
+      verified: result[i]?.verified ?? false,
     })));
     set({ breakpoints: newBreakpoints });
   },
 
   clearBreakpoints: async (path: string) => {
-    await trpcCall('dap', 'clearBreakpoints', { path }, 'mutation');
+    await trpc.dap.clearBreakpoints({ path });
     const newBreakpoints = new Map(get().breakpoints);
     newBreakpoints.delete(path);
     set({ breakpoints: newBreakpoints });
@@ -157,65 +149,64 @@ export const useDapStore = create<DapStore>((set, get) => ({
 
   // Execution control
   continue: async (threadId?: number) => {
-    await trpcCall('dap', 'continue', { threadId }, 'mutation');
+    await trpc.dap.continue({ threadId });
     await get().refreshState();
   },
 
   next: async (threadId?: number) => {
-    await trpcCall('dap', 'next', { threadId }, 'mutation');
+    await trpc.dap.next({ threadId });
     await get().refreshState();
   },
 
   stepIn: async (threadId?: number) => {
-    await trpcCall('dap', 'stepIn', { threadId }, 'mutation');
+    await trpc.dap.stepIn({ threadId });
     await get().refreshState();
   },
 
   stepOut: async (threadId?: number) => {
-    await trpcCall('dap', 'stepOut', { threadId }, 'mutation');
+    await trpc.dap.stepOut({ threadId });
     await get().refreshState();
   },
 
   pause: async (threadId?: number) => {
-    await trpcCall('dap', 'pause', { threadId }, 'mutation');
+    await trpc.dap.pause({ threadId });
     await get().refreshState();
   },
 
   // Threads
   getThreads: async () => {
-    const result = await trpcCall('dap', 'getThreads', {}, 'query');
-    set({ threads: result.threads ?? [] });
-    if (result.threads?.length > 0) {
-      set({ currentThreadId: result.threads[0].id });
+    const threads = await trpc.dap.getThreads();
+    set({ threads: threads ?? [] });
+    if (threads && threads.length > 0) {
+      set({ currentThreadId: threads[0]?.id ?? null });
     }
   },
 
   // Stack trace
   getStackTrace: async (threadId?: number, startFrame = 0, levels = 20) => {
-    const result = await trpcCall('dap', 'getStackTrace', { threadId, startFrame, levels }, 'query');
-    set({ stackFrames: result.stackFrames ?? [] });
-    if (result.stackFrames?.length > 0) {
-      set({ selectedFrameId: result.stackFrames[0].id });
+    const stackFrames = await trpc.dap.getStackTrace({ threadId, startFrame, levels });
+    set({ stackFrames: stackFrames ?? [] });
+    if (stackFrames && stackFrames.length > 0) {
+      set({ selectedFrameId: stackFrames[0]?.id ?? null });
     }
   },
 
   // Variables
   getScopes: async (frameId: number) => {
-    const result = await trpcCall('dap', 'getScopes', { frameId }, 'query');
-    set({ scopes: result.scopes ?? [] });
+    const scopes = await trpc.dap.getScopes({ frameId });
+    set({ scopes: scopes ?? [] });
   },
 
   getVariables: async (variablesReference: number) => {
-    const result = await trpcCall('dap', 'getVariables', { variablesReference }, 'query');
+    const variables = await trpc.dap.getVariables({ variablesReference });
     const newVariables = new Map(get().variables);
-    newVariables.set(variablesReference, result.variables ?? []);
+    newVariables.set(variablesReference, variables ?? []);
     set({ variables: newVariables });
   },
 
   // Evaluate
   evaluate: async (expression: string, frameId?: number) => {
-    const result = await trpcCall('dap', 'evaluate', { expression, frameId }, 'mutation');
-    return result;
+    return await trpc.dap.evaluate({ expression, frameId });
   },
 
   // Output

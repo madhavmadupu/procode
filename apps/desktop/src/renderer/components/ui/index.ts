@@ -1,8 +1,25 @@
 export { Button, buttonVariants } from "./button"
 export { Input } from "./input"
+export { Textarea } from "./textarea"
 export { Badge, badgeVariants } from "./badge"
 export { Separator } from "./separator"
 export { Skeleton } from "./skeleton"
+export { Switch } from "./switch"
+export { Progress } from "./progress"
+export { Label } from "./label"
+export { Checkbox } from "./checkbox"
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "./card"
+export { Toggle, toggleVariants } from "./toggle"
+export { Avatar, AvatarImage, AvatarFallback } from "./avatar"
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+} from "./breadcrumb"
 export {
   Dialog,
   DialogPortal,
@@ -48,3 +65,4 @@ export {
   CommandShortcut,
   CommandSeparator,
 } from "./command"
+export { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./resizable"

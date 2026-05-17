@@ -27,10 +27,16 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     let current: any = newSettings;
 
     for (let i = 0; i < parts.length - 1; i++) {
-      current = current[parts[i]];
+      const part = parts[i];
+      if (part !== undefined) {
+        current = current[part];
+      }
     }
 
-    current[parts[parts.length - 1]] = value;
+    const lastPart = parts[parts.length - 1];
+    if (lastPart !== undefined) {
+      current[lastPart] = value;
+    }
     set({ settings: newSettings });
   },
 }));
