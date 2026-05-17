@@ -54,4 +54,40 @@ export const fileSystemRouter = router({
     .query(async ({ ctx }) => {
       return ctx.fileSystem.getWorkspaceRoot();
     }),
+
+  createFile: publicProcedure
+    .input(z.object({ dirPath: z.string(), name: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.fileSystem.createFile(input.dirPath, input.name);
+    }),
+
+  createFolder: publicProcedure
+    .input(z.object({ dirPath: z.string(), name: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.fileSystem.createFolder(input.dirPath, input.name);
+    }),
+
+  deletePath: publicProcedure
+    .input(z.object({ path: z.string(), recursive: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.fileSystem.deletePath(input.path, input.recursive);
+    }),
+
+  move: publicProcedure
+    .input(z.object({ sourcePath: z.string(), targetFolderPath: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.fileSystem.move(input.sourcePath, input.targetFolderPath);
+    }),
+
+  copyPath: publicProcedure
+    .input(z.object({ path: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.fileSystem.copyPath(input.path);
+    }),
+
+  revealInFinder: publicProcedure
+    .input(z.object({ path: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.fileSystem.revealInFinder(input.path);
+    }),
 });

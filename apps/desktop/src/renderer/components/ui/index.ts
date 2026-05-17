@@ -66,3 +66,16 @@ export {
   CommandSeparator,
 } from "./command"
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./resizable"
+export {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogOverlay,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "./alert-dialog"

@@ -113,6 +113,52 @@ export class FileSystemService {
     await fs.rename(resolvedOld, resolvedNew);
   }
 
+  async createFile(dirPath: string, name: string): Promise<string> {
+    const resolvedDir = this.resolvePath(dirPath);
+    const fullPath = path.join(resolvedDir, name);
+    await fs.writeFile(fullPath, "", "utf-8");
+    return fullPath;
+  }
+
+  async createFolder(dirPath: string, name: string): Promise<string> {
+    const resolvedDir = this.resolvePath(dirPath);
+    const fullPath = path.join(resolvedDir, name);
+    await fs.mkdir(fullPath, { recursive: true });
+    return fullPath;
+  }
+
+  async deletePath(targetPath: string, recursive: boolean): Promise<void> {
+    const resolved = this.resolvePath(targetPath);
+    const stat = await fs.stat(resolved);
+    if (stat.isDirectory() && recursive) {
+      await fs.rm(resolved, { recursive: true, force: true });
+    } else if (stat.isDirectory()) {
+      await fs.rmdir(resolved);
+    } else {
+      await fs.unlink(resolved);
+    }
+  }
+
+  async move(sourcePath: string, targetFolderPath: string): Promise<string> {
+    const resolvedSource = this.resolvePath(sourcePath);
+    const resolvedTarget = this.resolvePath(targetFolderPath);
+    const name = path.basename(sourcePath);
+    const newPath = path.join(resolvedTarget, name);
+    await fs.rename(resolvedSource, newPath);
+    return newPath;
+  }
+
+  async copyPath(targetPath: string): Promise<string> {
+    const resolved = this.resolvePath(targetPath);
+    return resolved;
+  }
+
+  async revealInFinder(targetPath: string): Promise<void> {
+    const { shell } = await import("electron");
+    const resolved = this.resolvePath(targetPath);
+    await shell.openPath(path.dirname(resolved));
+  }
+
   private resolvePath(filePath: string): string {
     if (path.isAbsolute(filePath)) {
       return filePath;

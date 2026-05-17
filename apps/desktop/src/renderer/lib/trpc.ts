@@ -98,6 +98,18 @@ export const trpc = {
       trpcCall<{ success: boolean; error?: string }>("fileSystem", "rename", { oldPath, newPath }, "mutation"),
     getWorkspaceRoot: () =>
       trpcCall<string | null>("fileSystem", "getWorkspaceRoot", undefined, "query"),
+    createFile: (dirPath: string, name: string) =>
+      trpcCall<string>("fileSystem", "createFile", { dirPath, name }, "mutation"),
+    createFolder: (dirPath: string, name: string) =>
+      trpcCall<string>("fileSystem", "createFolder", { dirPath, name }, "mutation"),
+    deletePath: (path: string, recursive: boolean) =>
+      trpcCall<void>("fileSystem", "deletePath", { path, recursive }, "mutation"),
+    move: (sourcePath: string, targetFolderPath: string) =>
+      trpcCall<string>("fileSystem", "move", { sourcePath, targetFolderPath }, "mutation"),
+    copyPath: (path: string) =>
+      trpcCall<string>("fileSystem", "copyPath", { path }, "query"),
+    revealInFinder: (path: string) =>
+      trpcCall<void>("fileSystem", "revealInFinder", { path }, "mutation"),
   },
   settings: {
     getSettings: () =>
