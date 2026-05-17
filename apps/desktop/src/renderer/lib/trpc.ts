@@ -168,6 +168,10 @@ export const trpc = {
       trpcCall<any[]>("git", "stashList", undefined, "query"),
     stashDrop: (input: { index: number }) =>
       trpcCall<void>("git", "stashDrop", input, "mutation"),
+    isGitRepo: () =>
+      trpcCall<boolean>("git", "isGitRepo", undefined, "query"),
+    init: () =>
+      trpcCall<{ success: boolean }>("git", "init", undefined, "mutation"),
   },
   ai: {
     checkHealth: () =>

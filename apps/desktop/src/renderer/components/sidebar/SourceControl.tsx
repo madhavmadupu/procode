@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useGitStore } from "../../stores/git.store";
 import { useWorkspaceStore } from "../../stores/workspace";
 import type { FileStatusEntry } from "@procode/types";
-import { FileIcon, PlusIcon, XIcon, ChevronRightIcon, ChevronDownIcon } from "../shared/icons";
-import { Button, Textarea, Badge, Separator, ScrollArea, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui";
+import { FileIcon, PlusIcon, XIcon, ChevronRightIcon, ChevronDownIcon, SourceControlIcon } from "../shared/icons";
+import { Button, Textarea, Badge, Separator, ScrollArea, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Skeleton } from "../ui";
+import { trpc } from "../../lib/trpc";
 import { cn } from "../../lib/utils";
 
 interface SourceControlProps {}
@@ -26,12 +27,39 @@ export function SourceControl({}: SourceControlProps) {
   const [showStaged, setShowStaged] = useState(true);
   const [showUnstaged, setShowUnstaged] = useState(true);
   const [discardTarget, setDiscardTarget] = useState<string | null>(null);
+  const [hasGitRepo, setHasGitRepo] = useState<boolean | null>(null);
+  const [isIniting, setIsIniting] = useState(false);
 
   useEffect(() => {
     if (rootPath) {
-      refreshStatus();
+      checkGitRepo();
     }
   }, [rootPath]);
+
+  const checkGitRepo = async () => {
+    try {
+      const isRepo = await trpc.git.isGitRepo();
+      setHasGitRepo(isRepo);
+      if (isRepo) {
+        refreshStatus();
+      }
+    } catch {
+      setHasGitRepo(false);
+    }
+  };
+
+  const handleInit = async () => {
+    setIsIniting(true);
+    try {
+      await trpc.git.init();
+      setHasGitRepo(true);
+      refreshStatus();
+    } catch (err) {
+      console.error("Failed to init git:", err);
+    } finally {
+      setIsIniting(false);
+    }
+  };
 
   const handleStage = async (path: string) => {
     await stageFiles([path]);
@@ -142,10 +170,33 @@ export function SourceControl({}: SourceControlProps) {
     );
   }
 
+  if (!rootPath) {
+    return (
+      <div className="flex flex-col items-center justify-center h-32 px-4 text-center">
+        <SourceControlIcon className="w-8 h-8 text-muted-foreground mb-3" />
+        <div className="text-xs text-muted-foreground">Open a folder to use source control</div>
+      </div>
+    );
+  }
+
+  if (hasGitRepo === false) {
+    return (
+      <div className="flex flex-col items-center justify-center h-32 px-4 text-center">
+        <SourceControlIcon className="w-8 h-8 text-muted-foreground mb-3" />
+        <div className="text-xs text-muted-foreground mb-4">No git repository found</div>
+        <Button onClick={handleInit} disabled={isIniting} size="compact" variant="outline">
+          {isIniting ? "Initializing..." : "Initialize Repository"}
+        </Button>
+      </div>
+    );
+  }
+
   if (isLoading && !status) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="text-sm text-muted-foreground">Loading...</div>
+      <div className="p-3 space-y-2">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
       </div>
     );
   }
