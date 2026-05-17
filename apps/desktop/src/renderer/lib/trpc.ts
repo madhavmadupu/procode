@@ -86,4 +86,50 @@ export const trpc = {
     resetSettings: (scope?: "global" | "workspace") =>
       trpcCall("settings", "resetSettings", { scope }, "mutation"),
   },
+  git: {
+    status: () =>
+      trpcCall("git", "status", undefined, "query"),
+    stage: (input: { paths: string[] }) =>
+      trpcCall("git", "stage", input, "mutation"),
+    unstage: (input: { paths: string[] }) =>
+      trpcCall("git", "unstage", input, "mutation"),
+    discard: (input: { paths: string[] }) =>
+      trpcCall("git", "discard", input, "mutation"),
+    diff: (input: { path: string; staged: boolean }) =>
+      trpcCall("git", "diff", input, "query"),
+    commit: (input: { message: string; signOff?: boolean }) =>
+      trpcCall("git", "commit", input, "mutation"),
+    amend: (input: { message?: string }) =>
+      trpcCall("git", "amend", input, "mutation"),
+    branches: () =>
+      trpcCall("git", "branches", undefined, "query"),
+    currentBranch: () =>
+      trpcCall("git", "currentBranch", undefined, "query"),
+    createBranch: (input: { name: string; from?: string }) =>
+      trpcCall("git", "createBranch", input, "mutation"),
+    checkoutBranch: (input: { name: string }) =>
+      trpcCall("git", "checkoutBranch", input, "mutation"),
+    deleteBranch: (input: { name: string; force?: boolean }) =>
+      trpcCall("git", "deleteBranch", input, "mutation"),
+    blame: (input: { path: string }) =>
+      trpcCall("git", "blame", input, "query"),
+    log: (input: { limit?: number; path?: string }) =>
+      trpcCall("git", "log", input, "query"),
+    fetch: (input: { remote?: string }) =>
+      trpcCall("git", "fetch", input, "mutation"),
+    pull: () =>
+      trpcCall("git", "pull", undefined, "mutation"),
+    push: (input: { remote: string; branch: string }) =>
+      trpcCall("git", "push", input, "mutation"),
+    remotes: () =>
+      trpcCall("git", "remotes", undefined, "query"),
+    stashPush: (input: { message?: string }) =>
+      trpcCall("git", "stashPush", input, "mutation"),
+    stashPop: (input: { index?: number }) =>
+      trpcCall("git", "stashPop", input, "mutation"),
+    stashList: () =>
+      trpcCall("git", "stashList", undefined, "query"),
+    stashDrop: (input: { index: number }) =>
+      trpcCall("git", "stashDrop", input, "mutation"),
+  },
 };

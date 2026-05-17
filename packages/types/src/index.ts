@@ -1,6 +1,19 @@
 export type { EditorConfig } from "./editor.js";
 export type { WorkspaceConfig, WorkspaceState } from "./workspace.js";
-export type { GitStatus, GitBranch, GitDiff } from "./git.js";
+export type {
+  RepoStatus,
+  FileStatusEntry,
+  BranchInfo,
+  DiffHunk,
+  FileDiff,
+  BlameLine,
+  CommitInfo,
+  PullResult,
+  RemoteInfo,
+  StashInfo,
+  LogOptions,
+  CommitOptions,
+} from "./git.js";
 export type { LSPConfig, Diagnostic, Completion } from "./lsp.js";
 export type { AgentTask, AgentRole, AgentMessage } from "./agent.js";
 export type { KnowledgeGraphNode, EdgeType, KnowledgeGraphEdge, KnowledgeGraph, GraphQuery } from "./graph.js";

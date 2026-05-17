@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 napi = { version = "2", features = ["async"] }
 napi-derive = "2"
+serde_json = "1"
 procode-graph = { path = "../procode-graph" }
 procode-vector = { path = "../procode-vector" }
 procode-git = { path = "../procode-git" }

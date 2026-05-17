@@ -5,6 +5,7 @@ import type { SettingsService } from "../services/settings.js";
 export interface TrpcContext {
   fileSystem: FileSystemService;
   settings: SettingsService;
+  workspaceRoot: string | null;
 }
 
 const t = initTRPC.context<TrpcContext>().create();

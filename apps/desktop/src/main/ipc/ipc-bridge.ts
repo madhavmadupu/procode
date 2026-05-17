@@ -25,7 +25,11 @@ export function registerTrpcIpcHandlers(
   fileSystem: FileSystemService,
   settings: SettingsService,
 ) {
-  const ctx: TrpcContext = { fileSystem, settings };
+  const ctx: TrpcContext = {
+    fileSystem,
+    settings,
+    workspaceRoot: fileSystem.getWorkspaceRoot(),
+  };
   const caller = appRouter.createCaller(ctx);
 
   ipcMain.on(TRPC_CHANNEL, async (event, request: TrpcRequest) => {
@@ -40,6 +44,8 @@ export function registerTrpcIpcHandlers(
         result = await (caller.fileSystem as any)[procedureName](request.input);
       } else if (routerName === "settings" && procedureName) {
         result = await (caller.settings as any)[procedureName](request.input);
+      } else if (routerName === "git" && procedureName) {
+        result = await (caller.git as any)[procedureName](request.input);
       } else {
         throw new Error(`Unknown router: ${routerName}`);
       }
