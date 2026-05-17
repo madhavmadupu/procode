@@ -178,7 +178,7 @@ export const trpc = {
       trpcCall<any>("ai", "checkHealth", undefined, "query"),
     chat: (input: { messages: Array<{ role: string; content: string }>; model?: string; temperature?: number; maxTokens?: number }) =>
       trpcCall<any>("ai", "chat", input, "mutation"),
-    configureProvider: (input: { provider: string; model: string; apiKey?: string; baseUrl?: string; temperature?: number; maxTokens?: number }) =>
+    configureProvider: (input: { provider: string; model: string; apiKey?: string; baseUrl?: string; temperature?: number; maxTokens?: number; projectId?: string }) =>
       trpcCall<void>("ai", "configureProvider", input, "mutation"),
     configureEmbeddingProvider: (input: { baseUrl?: string }) =>
       trpcCall<void>("ai", "configureEmbeddingProvider", input, "mutation"),

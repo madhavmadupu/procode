@@ -74,12 +74,13 @@ export const EmbeddingResponseSchema = z.object({
 export type EmbeddingResponse = z.infer<typeof EmbeddingResponseSchema>;
 
 export const ProviderConfigSchema = z.object({
-  provider: z.enum(['ollama', 'openai', 'anthropic']),
+  provider: z.enum(['ollama', 'openai', 'anthropic', 'opencode']),
   model: z.string(),
   apiKey: z.string().optional(),
   baseUrl: z.string().optional(),
   temperature: z.number().default(0.7),
   maxTokens: z.number().default(4096),
+  projectId: z.string().optional(),
 });
 
 export type ProviderConfig = z.infer<typeof ProviderConfigSchema>;

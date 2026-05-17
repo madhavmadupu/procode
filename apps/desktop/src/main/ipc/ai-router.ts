@@ -55,12 +55,13 @@ export const aiRouter = router({
   configureProvider: publicProcedure
     .input(
       z.object({
-        provider: z.enum(["ollama", "openai", "anthropic"]),
+        provider: z.enum(["ollama", "openai", "anthropic", "opencode"]),
         model: z.string(),
         apiKey: z.string().optional(),
         baseUrl: z.string().optional(),
         temperature: z.number().default(0.7),
         maxTokens: z.number().default(4096),
+        projectId: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -73,6 +74,7 @@ export const aiRouter = router({
         baseUrl: input.baseUrl,
         temperature: input.temperature,
         maxTokens: input.maxTokens,
+        projectId: input.projectId,
       });
 
       return { success: true, provider: input.provider, model: input.model };
