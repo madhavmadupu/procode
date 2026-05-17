@@ -7,6 +7,8 @@ import { FileTree } from "./components/sidebar/FileTree";
 import { TabBar } from "./components/editor/TabBar";
 import { EditorPanel } from "./components/editor/EditorPanel";
 import { StatusBar } from "./components/shared/StatusBar";
+import { Breadcrumbs } from "./components/shared/Breadcrumbs";
+import { CommandPalette } from "./components/shared/CommandPalette";
 import { OpenFolderDialog } from "./components/shared/OpenFolderDialog";
 
 function App() {
@@ -47,6 +49,7 @@ function App() {
           {rootPath ? (
             <>
               <TabBar />
+              <Breadcrumbs />
               <div className="flex-1 overflow-hidden">
                 <EditorPanel />
               </div>
@@ -72,6 +75,8 @@ function App() {
           onClose={() => rootPath && setShowOpenDialog(false)}
         />
       )}
+
+      <CommandPalette />
     </div>
   );
 }
