@@ -2,6 +2,8 @@ import { ipcMain } from "electron";
 import type { TrpcContext } from "./trpc.js";
 import type { FileSystemService } from "../services/file-system.js";
 import type { SettingsService } from "../services/settings.js";
+import type { LSPHost } from "@procode/lsp-host";
+import type { DAPHost } from "@procode/dap-host";
 import { appRouter } from "./index.js";
 
 const TRPC_CHANNEL = "trpc-request";
@@ -24,11 +26,15 @@ interface TrpcResponse {
 export function registerTrpcIpcHandlers(
   fileSystem: FileSystemService,
   settings: SettingsService,
+  lspHost: LSPHost,
+  dapHost: DAPHost,
 ) {
   const ctx: TrpcContext = {
     fileSystem,
     settings,
     workspaceRoot: fileSystem.getWorkspaceRoot(),
+    lspHost,
+    dapHost,
   };
   const caller = appRouter.createCaller(ctx);
 
@@ -46,6 +52,12 @@ export function registerTrpcIpcHandlers(
         result = await (caller.settings as any)[procedureName](request.input);
       } else if (routerName === "git" && procedureName) {
         result = await (caller.git as any)[procedureName](request.input);
+      } else if (routerName === "ai" && procedureName) {
+        result = await (caller.ai as any)[procedureName](request.input);
+      } else if (routerName === "lsp" && procedureName) {
+        result = await (caller.lsp as any)[procedureName](request.input);
+      } else if (routerName === "dap" && procedureName) {
+        result = await (caller.dap as any)[procedureName](request.input);
       } else {
         throw new Error(`Unknown router: ${routerName}`);
       }

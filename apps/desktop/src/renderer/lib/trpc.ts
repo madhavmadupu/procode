@@ -148,4 +148,80 @@ export const trpc = {
     indexFile: (input: { filePath: string; content: string; language: string }) =>
       trpcCall("ai", "indexFile", input, "mutation"),
   },
+  lsp: {
+    startServer: (input: { serverId: string; rootPath: string }) =>
+      trpcCall("lsp", "startServer", input, "mutation"),
+    stopServer: (input: { serverId: string }) =>
+      trpcCall("lsp", "stopServer", input, "mutation"),
+    stopAll: () =>
+      trpcCall("lsp", "stopAll", {}, "mutation"),
+    getServerStates: () =>
+      trpcCall("lsp", "getServerStates", {}, "query"),
+    completion: (input: { uri: string; line: number; character: number; triggerKind?: number; triggerCharacter?: string }) =>
+      trpcCall("lsp", "completion", input, "query"),
+    hover: (input: { uri: string; line: number; character: number }) =>
+      trpcCall("lsp", "hover", input, "query"),
+    definition: (input: { uri: string; line: number; character: number }) =>
+      trpcCall("lsp", "definition", input, "query"),
+    references: (input: { uri: string; line: number; character: number; includeDeclaration?: boolean }) =>
+      trpcCall("lsp", "references", input, "query"),
+    documentSymbols: (input: { uri: string }) =>
+      trpcCall("lsp", "documentSymbols", input, "query"),
+    workspaceSymbols: (input: { query: string }) =>
+      trpcCall("lsp", "workspaceSymbols", input, "query"),
+    rename: (input: { uri: string; line: number; character: number; newName: string }) =>
+      trpcCall("lsp", "rename", input, "mutation"),
+    signatureHelp: (input: { uri: string; line: number; character: number }) =>
+      trpcCall("lsp", "signatureHelp", input, "query"),
+    codeAction: (input: { uri: string; startLine: number; startCharacter: number; endLine: number; endCharacter: number; diagnostics?: unknown[] }) =>
+      trpcCall("lsp", "codeAction", input, "query"),
+    formatting: (input: { uri: string; tabSize?: number; insertSpaces?: boolean }) =>
+      trpcCall("lsp", "formatting", input, "mutation"),
+    didOpen: (input: { uri: string; languageId: string; version: number; text: string }) =>
+      trpcCall("lsp", "didOpen", input, "mutation"),
+    didChange: (input: { uri: string; version: number; changes: { range?: { start: { line: number; character: number }; end: { line: number; character: number } }; text: string }[] }) =>
+      trpcCall("lsp", "didChange", input, "mutation"),
+    didClose: (input: { uri: string }) =>
+      trpcCall("lsp", "didClose", input, "mutation"),
+    didSave: (input: { uri: string; text?: string }) =>
+      trpcCall("lsp", "didSave", input, "mutation"),
+    checkServers: () =>
+      trpcCall("lsp", "checkServers", {}, "query"),
+    installServer: (input: { serverId: string }) =>
+      trpcCall("lsp", "installServer", input, "mutation"),
+  },
+  dap: {
+    startSession: (input: { adapterPath: string; config: unknown }) =>
+      trpcCall("dap", "startSession", input, "mutation"),
+    stopSession: () =>
+      trpcCall("dap", "stopSession", {}, "mutation"),
+    getState: () =>
+      trpcCall("dap", "getState", {}, "query"),
+    setBreakpoints: (input: { path: string; breakpoints: { line: number; column?: number; condition?: string; hitCondition?: string; logMessage?: string }[] }) =>
+      trpcCall("dap", "setBreakpoints", input, "mutation"),
+    clearBreakpoints: (input: { path: string }) =>
+      trpcCall("dap", "clearBreakpoints", input, "mutation"),
+    getBreakpoints: () =>
+      trpcCall("dap", "getBreakpoints", {}, "query"),
+    continue: (input: { threadId?: number }) =>
+      trpcCall("dap", "continue", input, "mutation"),
+    next: (input: { threadId?: number }) =>
+      trpcCall("dap", "next", input, "mutation"),
+    stepIn: (input: { threadId?: number }) =>
+      trpcCall("dap", "stepIn", input, "mutation"),
+    stepOut: (input: { threadId?: number }) =>
+      trpcCall("dap", "stepOut", input, "mutation"),
+    pause: (input: { threadId?: number }) =>
+      trpcCall("dap", "pause", input, "mutation"),
+    getThreads: () =>
+      trpcCall("dap", "getThreads", {}, "query"),
+    getStackTrace: (input: { threadId?: number; startFrame?: number; levels?: number }) =>
+      trpcCall("dap", "getStackTrace", input, "query"),
+    getScopes: (input: { frameId: number }) =>
+      trpcCall("dap", "getScopes", input, "query"),
+    getVariables: (input: { variablesReference: number }) =>
+      trpcCall("dap", "getVariables", input, "query"),
+    evaluate: (input: { expression: string; frameId?: number }) =>
+      trpcCall("dap", "evaluate", input, "mutation"),
+  },
 };

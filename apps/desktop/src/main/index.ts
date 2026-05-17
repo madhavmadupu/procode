@@ -5,12 +5,16 @@ import type { FileChange } from "@procode/types";
 import { FileSystemService } from "./services/file-system.js";
 import { SettingsService } from "./services/settings.js";
 import { registerTrpcIpcHandlers } from "./ipc/ipc-bridge.js";
+import { LSPHost } from "@procode/lsp-host";
+import { DAPHost } from "@procode/dap-host";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let mainWindow: BrowserWindow | null = null;
 let fileSystemService: FileSystemService | null = null;
 let settingsService: SettingsService | null = null;
+let lspHost: LSPHost | null = null;
+let dapHost: DAPHost | null = null;
 
 function onFileChange(change: FileChange) {
   mainWindow?.webContents.send("file-change", change);
@@ -52,8 +56,10 @@ async function initializeServices() {
   await settingsService.initialize();
 
   fileSystemService = new FileSystemService(onFileChange);
+  lspHost = new LSPHost();
+  dapHost = new DAPHost();
 
-  registerTrpcIpcHandlers(fileSystemService, settingsService);
+  registerTrpcIpcHandlers(fileSystemService, settingsService, lspHost, dapHost);
 }
 
 app.whenReady().then(async () => {
@@ -67,9 +73,11 @@ app.whenReady().then(async () => {
   });
 });
 
-app.on("window-all-closed", () => {
+app.on("window-all-closed", async () => {
   fileSystemService?.stopWatcher();
   settingsService?.dispose();
+  await lspHost?.stopAll();
+  await dapHost?.stop();
 
   if (process.platform !== "darwin") {
     app.quit();

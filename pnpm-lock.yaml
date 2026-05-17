@@ -20,6 +20,9 @@ importers:
       '@procode/agent-orchestration':
         specifier: workspace:*
         version: link:../../packages/agent-orchestration
+      '@procode/dap-host':
+        specifier: workspace:*
+        version: link:../../packages/dap-host
       '@procode/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -149,6 +152,9 @@ importers:
         specifier: workspace:*
         version: link:../types
     devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -258,6 +264,9 @@ importers:
         specifier: workspace:*
         version: link:../utils
     devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

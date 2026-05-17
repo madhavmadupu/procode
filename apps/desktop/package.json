@@ -17,6 +17,7 @@
     "@procode/editor-core": "workspace:*",
     "@procode/git-engine": "workspace:*",
     "@procode/lsp-host": "workspace:*",
+    "@procode/dap-host": "workspace:*",
     "@procode/knowledge-graph": "workspace:*",
     "@procode/rag-pipeline": "workspace:*",
     "@procode/agent-orchestration": "workspace:*",
