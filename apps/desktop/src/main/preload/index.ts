@@ -13,4 +13,16 @@ contextBridge.exposeInMainWorld("procode", {
       return () => ipcRenderer.removeListener(channel, subscription);
     },
   },
+  onFileChange: (callback: (change: unknown) => void) => {
+    const subscription = (_event: Electron.IpcRendererEvent, change: unknown) =>
+      callback(change);
+    ipcRenderer.on("file-change", subscription);
+    return () => ipcRenderer.removeListener("file-change", subscription);
+  },
+  onSettingsChange: (callback: (settings: unknown) => void) => {
+    const subscription = (_event: Electron.IpcRendererEvent, settings: unknown) =>
+      callback(settings);
+    ipcRenderer.on("settings-change", subscription);
+    return () => ipcRenderer.removeListener("settings-change", subscription);
+  },
 });

@@ -20,3 +20,19 @@ export interface Settings {
     fontSize: number;
   };
 }
+
+export type SettingsScope = "global" | "workspace";
+
+export interface SettingsLayer {
+  scope: SettingsScope;
+  path: string;
+  settings: Partial<Settings>;
+  lastModified: number;
+}
+
+export interface SettingsMerge {
+  global: SettingsLayer;
+  workspace?: SettingsLayer;
+  merged: Settings;
+  conflicts: string[];
+}
