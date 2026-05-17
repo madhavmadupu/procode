@@ -22,6 +22,9 @@
 ## AI Inference
 
 - NEVER call Ollama synchronously. All LLM calls stream via `AsyncGenerator`.
+- NEVER route embeddings through the chat provider. EmbeddingProvider is always Ollama locally.
+- NEVER conflate LLMProvider with AgenticProvider. OpenCode implements both; others implement only LLMProvider.
+- NEVER let the AgentRouter assume AgenticProvider is available. Always check `supportsHandoff()` before delegating task graphs.
 
 ## Package Boundaries
 
