@@ -6,6 +6,7 @@ import fs from "node:fs";
 export interface WorkspaceRecord {
   id: string;
   rootPath: string;
+  name: string;
   lastOpened: number;
   state: "idle" | "indexing" | "ready" | "error";
   createdAt: number;
@@ -51,10 +52,13 @@ export class ProCodeDB {
       CREATE TABLE IF NOT EXISTS workspaces (
         id TEXT PRIMARY KEY,
         root_path TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL DEFAULT '',
         last_opened INTEGER NOT NULL,
         state TEXT NOT NULL DEFAULT 'idle',
         created_at INTEGER NOT NULL
       );
+
+      ALTER TABLE workspaces ADD COLUMN name TEXT NOT NULL DEFAULT '';
 
       CREATE TABLE IF NOT EXISTS settings_cache (
         key TEXT NOT NULL,
@@ -80,22 +84,25 @@ export class ProCodeDB {
   }
 
   // Workspace operations
-  upsertWorkspace(rootPath: string): WorkspaceRecord {
+  upsertWorkspace(rootPath: string, name?: string): WorkspaceRecord {
     const id = `ws-${Buffer.from(rootPath).toString("base64url")}`;
     const now = Date.now();
+    const folderName = name ?? path.basename(rootPath);
 
     const stmt = this.db.prepare(`
-      INSERT INTO workspaces (id, root_path, last_opened, state, created_at)
-      VALUES (@id, @rootPath, @lastOpened, @state, @createdAt)
+      INSERT INTO workspaces (id, root_path, name, last_opened, state, created_at)
+      VALUES (@id, @rootPath, @name, @lastOpened, @state, @createdAt)
       ON CONFLICT(root_path) DO UPDATE SET
         last_opened = @lastOpened,
-        state = @state
+        state = @state,
+        name = @name
       RETURNING *
     `);
 
     const record = stmt.get({
       id,
       rootPath,
+      name: folderName,
       lastOpened: now,
       state: "idle",
       createdAt: now,
@@ -114,6 +121,17 @@ export class ProCodeDB {
       "SELECT * FROM workspaces ORDER BY last_opened DESC LIMIT ?",
     );
     return stmt.all(limit) as WorkspaceRecord[];
+  }
+
+  getLastOpened(): WorkspaceRecord | null {
+    const stmt = this.db.prepare(
+      "SELECT * FROM workspaces ORDER BY last_opened DESC LIMIT 1",
+    );
+    return (stmt.get() as WorkspaceRecord) || null;
+  }
+
+  clearLastOpened(): void {
+    this.db.exec("DELETE FROM workspaces");
   }
 
   updateWorkspaceState(rootPath: string, state: WorkspaceRecord["state"]): void {

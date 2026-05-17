@@ -223,9 +223,12 @@ function AiSetupStep({ onNext, onBack }: StepProps) {
 }
 
 function DoneStep({ onNext }: StepProps) {
-  const { setCompleted } = useFirstRunStore();
+  const { setCompleted, workspacePath } = useFirstRunStore();
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
+    if (workspacePath) {
+      useWorkspaceStore.getState().setWorkspace(workspacePath);
+    }
     setCompleted(true);
     onNext();
   };

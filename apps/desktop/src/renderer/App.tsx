@@ -70,26 +70,49 @@ function ActivityButton({ icon, label, isActive, onClick }: ActivityButtonProps)
 }
 
 function App() {
-  const { rootPath, setWorkspace, state } = useWorkspaceStore();
+  const { rootPath, workspaceName, setWorkspace, rehydrate, state } = useWorkspaceStore();
   const { isSidebarOpen } = useEditorStore();
-  const { hasCompletedOnboarding } = useFirstRunStore();
-  const [showOpenDialog, setShowOpenDialog] = useState(!rootPath);
+  const { hasCompletedOnboarding, initialize: initializeFirstRun } = useFirstRunStore();
+  const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [activePanel, setActivePanel] = useState<SidebarPanel>("explorer");
   const [bottomPanelOpen, setBottomPanelOpen] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const lspStore = useLspStore();
   const dapStore = useDapStore();
 
   useEffect(() => {
-    if (!rootPath && hasCompletedOnboarding) {
+    async function init() {
+      await initializeFirstRun();
+
+      const lastWorkspace = await window.procode.ipc.invoke("get-last-workspace", {}) as { rootPath: string; name: string } | null;
+      if (lastWorkspace) {
+        rehydrate(lastWorkspace.rootPath, lastWorkspace.name);
+      }
+
+      setIsInitializing(false);
+    }
+    init();
+  }, []);
+
+  useEffect(() => {
+    if (!rootPath && hasCompletedOnboarding && !isInitializing) {
       setShowOpenDialog(true);
     }
-  }, [rootPath, hasCompletedOnboarding]);
+  }, [rootPath, hasCompletedOnboarding, isInitializing]);
 
   const handleOpenFolder = async (folderPath: string) => {
     setWorkspace(folderPath);
     setShowOpenDialog(false);
   };
+
+  if (isInitializing) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground text-sm">Loading ProCode...</div>
+      </div>
+    );
+  }
 
   if (!hasCompletedOnboarding) {
     return <FirstRunWizard />;
@@ -102,9 +125,9 @@ function App() {
           {/* Title Bar */}
           <header className="h-8 flex items-center px-4 border-b border-sidebar-border bg-title-bar text-title-bar-foreground select-none" role="banner">
             <span className="text-sm font-medium">ProCode</span>
-            {rootPath && (
+            {workspaceName && (
               <span className="ml-4 text-xs text-muted-foreground truncate">
-                {rootPath}
+                {workspaceName}
               </span>
             )}
           </header>

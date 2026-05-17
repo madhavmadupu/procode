@@ -7,6 +7,7 @@ import { lspRouter } from "./lsp-router.js";
 import { dapRouter } from "./dap-router.js";
 import { terminalRouter } from "./terminal-router.js";
 import { extensionRouter } from "./extension-router.js";
+import { workspaceRouter } from "./workspace-router.js";
 
 export const appRouter = router({
   fileSystem: fileSystemRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
   dap: dapRouter,
   terminal: terminalRouter,
   extension: extensionRouter,
+  workspace: workspaceRouter,
 });
 
 export type AppRouter = typeof appRouter;

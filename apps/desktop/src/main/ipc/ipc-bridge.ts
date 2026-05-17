@@ -6,6 +6,7 @@ import type { LSPHost } from "@procode/lsp-host";
 import type { DAPHost } from "@procode/dap-host";
 import type { TerminalHost } from "@procode/terminal";
 import type { ExtensionHost } from "@procode/extension-api";
+import type { ProCodeDB } from "@procode/db";
 import { appRouter } from "./index.js";
 
 const TRPC_CHANNEL = "trpc-request";
@@ -34,6 +35,7 @@ export function registerTrpcIpcHandlers(
   dapHost: DAPHost,
   terminalHost: TerminalHost,
   extensionHost: ExtensionHost,
+  db: ProCodeDB,
 ) {
   const ctx: TrpcContext = {
     fileSystem,
@@ -43,6 +45,7 @@ export function registerTrpcIpcHandlers(
     dapHost,
     terminalHost,
     extensionHost,
+    db,
   };
   const caller = appRouter.createCaller(ctx);
 
@@ -74,6 +77,8 @@ export function registerTrpcIpcHandlers(
         result = await (caller.terminal as any)[procedureName](request.input);
       } else if (routerName === "extension" && procedureName) {
         result = await (caller.extension as any)[procedureName](request.input);
+      } else if (routerName === "workspace" && procedureName) {
+        result = await (caller.workspace as any)[procedureName](request.input);
       } else {
         throw new Error(`Unknown router: ${routerName}`);
       }

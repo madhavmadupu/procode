@@ -279,4 +279,12 @@ export const trpc = {
     registerExtension: (input: { manifest: any; extensionPath: string }) =>
       trpcCall<void>("extension", "registerExtension", input, "mutation"),
   },
+  workspace: {
+    getLastOpened: () =>
+      trpcCall<{ id: string; rootPath: string; name: string; lastOpened: number; state: string; createdAt: number } | null>("workspace", "getLastOpened", undefined, "query"),
+    setLastOpened: (input: { rootPath: string; name?: string }) =>
+      trpcCall<{ id: string; rootPath: string; name: string; lastOpened: number; state: string; createdAt: number }>("workspace", "setLastOpened", input, "mutation"),
+    clearLastOpened: () =>
+      trpcCall<void>("workspace", "clearLastOpened", undefined, "mutation"),
+  },
 };
