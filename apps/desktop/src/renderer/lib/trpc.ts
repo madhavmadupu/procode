@@ -132,4 +132,20 @@ export const trpc = {
     stashDrop: (input: { index: number }) =>
       trpcCall("git", "stashDrop", input, "mutation"),
   },
+  ai: {
+    checkHealth: () =>
+      trpcCall("ai", "checkHealth", undefined, "query"),
+    chat: (input: { messages: Array<{ role: string; content: string }>; model?: string; temperature?: number; maxTokens?: number }) =>
+      trpcCall("ai", "chat", input, "mutation"),
+    configureProvider: (input: { provider: string; model: string; apiKey?: string; baseUrl?: string; temperature?: number; maxTokens?: number }) =>
+      trpcCall("ai", "configureProvider", input, "mutation"),
+    configureEmbeddingProvider: (input: { baseUrl?: string }) =>
+      trpcCall("ai", "configureEmbeddingProvider", input, "mutation"),
+    executeAgentTask: (input: { request: string; context: string[] }) =>
+      trpcCall("ai", "executeAgentTask", input, "mutation"),
+    searchCodebase: (input: { query: string; topK?: number }) =>
+      trpcCall("ai", "searchCodebase", input, "query"),
+    indexFile: (input: { filePath: string; content: string; language: string }) =>
+      trpcCall("ai", "indexFile", input, "mutation"),
+  },
 };

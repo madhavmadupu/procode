@@ -7,6 +7,7 @@ import { useFirstRunStore } from "./stores/first-run";
 import { FileTree } from "./components/sidebar/FileTree";
 import { SourceControl } from "./components/sidebar/SourceControl";
 import { Timeline } from "./components/sidebar/Timeline";
+import { AgentPanel } from "./components/sidebar/AgentPanel";
 import { TabBar } from "./components/editor/TabBar";
 import { EditorPanel } from "./components/editor/EditorPanel";
 import { StatusBar } from "./components/shared/StatusBar";
@@ -14,9 +15,9 @@ import { Breadcrumbs } from "./components/shared/Breadcrumbs";
 import { CommandPalette } from "./components/shared/CommandPalette";
 import { FirstRunWizard } from "./components/shared/FirstRunWizard";
 import { OpenFolderDialog } from "./components/shared/OpenFolderDialog";
-import { FolderIcon, SourceControlIcon, ClockIcon } from "./components/shared/icons";
+import { FolderIcon, SourceControlIcon, ClockIcon, SparkleIcon } from "./components/shared/icons";
 
-type SidebarPanel = "explorer" | "source-control" | "timeline";
+type SidebarPanel = "explorer" | "source-control" | "timeline" | "agent";
 
 function App() {
   const { rootPath, setWorkspace, state } = useWorkspaceStore();
@@ -88,6 +89,17 @@ function App() {
             >
               <ClockIcon className="w-5 h-5" />
             </button>
+            <button
+              onClick={() => setActivePanel("agent")}
+              className={`p-2 rounded transition-colors ${
+                activePanel === "agent"
+                  ? "text-zinc-100 bg-zinc-800"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+              title="AI Agent"
+            >
+              <SparkleIcon className="w-5 h-5" />
+            </button>
           </div>
         )}
 
@@ -97,6 +109,7 @@ function App() {
             {activePanel === "explorer" && <FileTree />}
             {activePanel === "source-control" && <SourceControl />}
             {activePanel === "timeline" && <Timeline />}
+            {activePanel === "agent" && <AgentPanel />}
           </aside>
         )}
 

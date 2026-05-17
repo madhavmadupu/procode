@@ -12,12 +12,13 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@procode/types": "workspace:*",
-    "@procode/utils": "workspace:*",
-    "@procode/rag-pipeline": "workspace:*",
+    "@procode/git-engine": "workspace:*",
     "@procode/knowledge-graph": "workspace:*",
     "@procode/llm-client": "workspace:*",
-    "@procode/git-engine": "workspace:*"
+    "@procode/rag-pipeline": "workspace:*",
+    "@procode/types": "workspace:*",
+    "@procode/utils": "workspace:*",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "typescript": "^5.7.0"
