@@ -34,8 +34,56 @@ import {
 } from "./components/shared/icons";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, ScrollArea } from "./components/ui";
 import { cn } from "./lib/utils";
+import { Group, Panel, Separator, useDefaultLayout } from "react-resizable-panels";
 
 const ExtensionPanel = lazy(() => import("./components/sidebar/ExtensionPanel"));
+
+type SidebarPanelType = "explorer" | "source-control" | "timeline" | "agent" | "debug" | "problems" | "extensions";
+
+function createLocalStoragePanelStorage(): Pick<Storage, "getItem" | "setItem"> {
+  return {
+    getItem: (key: string) => {
+      try {
+        return localStorage.getItem(`procode-layout-${key}`);
+      } catch {
+        return null;
+      }
+    },
+    setItem: (key: string, value: string) => {
+      try {
+        localStorage.setItem(`procode-layout-${key}`, value);
+      } catch {
+        // Storage full or disabled
+      }
+    },
+  };
+}
+
+interface ResizableGroupProps {
+  id: string;
+  orientation: "horizontal" | "vertical";
+  className?: string;
+  children: React.ReactNode;
+}
+
+function ResizableGroup({ id, orientation, className, children }: ResizableGroupProps) {
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id,
+    storage: createLocalStoragePanelStorage(),
+  });
+
+  return (
+    <Group
+      id={id}
+      orientation={orientation}
+      className={className}
+      defaultLayout={defaultLayout}
+      onLayoutChanged={onLayoutChanged}
+    >
+      {children}
+    </Group>
+  );
+}
 
 type SidebarPanel = "explorer" | "source-control" | "timeline" | "agent" | "debug" | "problems" | "extensions";
 
@@ -71,10 +119,10 @@ function ActivityButton({ icon, label, isActive, onClick }: ActivityButtonProps)
 
 function App() {
   const { rootPath, workspaceName, setWorkspace, rehydrate, state } = useWorkspaceStore();
-  const { isSidebarOpen } = useEditorStore();
+  const { isSidebarOpen, toggleSidebar, toggleTerminal } = useEditorStore();
   const { hasCompletedOnboarding, initialize: initializeFirstRun } = useFirstRunStore();
   const [showOpenDialog, setShowOpenDialog] = useState(false);
-  const [activePanel, setActivePanel] = useState<SidebarPanel>("explorer");
+  const [activePanel, setActivePanel] = useState<SidebarPanelType>("explorer");
   const [bottomPanelOpen, setBottomPanelOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
@@ -100,6 +148,21 @@ function App() {
       setShowOpenDialog(true);
     }
   }, [rootPath, hasCompletedOnboarding, isInitializing]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+        e.preventDefault();
+        toggleSidebar();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "j") {
+        e.preventDefault();
+        setBottomPanelOpen(prev => !prev);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleOpenFolder = async (folderPath: string) => {
     setWorkspace(folderPath);
@@ -134,129 +197,144 @@ function App() {
 
           {/* Main Content */}
           <main className="flex-1 flex overflow-hidden">
-            {/* Activity Bar */}
-            {isSidebarOpen && rootPath && (
-              <nav className="w-12 border-r border-sidebar-border bg-activity-bar flex flex-col items-center py-2 gap-1" role="navigation" aria-label="Activity Bar">
-                <ActivityButton
-                  icon={<FolderIcon className="w-5 h-5" />}
-                  label="Explorer"
-                  isActive={activePanel === "explorer"}
-                  onClick={() => setActivePanel("explorer")}
-                />
-                <ActivityButton
-                  icon={<SourceControlIcon className="w-5 h-5" />}
-                  label="Source Control"
-                  isActive={activePanel === "source-control"}
-                  onClick={() => setActivePanel("source-control")}
-                />
-                <ActivityButton
-                  icon={<BugIcon className="w-5 h-5" />}
-                  label="Run & Debug"
-                  isActive={activePanel === "debug"}
-                  onClick={() => setActivePanel("debug")}
-                />
-                <ActivityButton
-                  icon={<AlertIcon className="w-5 h-5" />}
-                  label="Problems"
-                  isActive={activePanel === "problems"}
-                  onClick={() => setActivePanel("problems")}
-                />
-                <ActivityButton
-                  icon={<ClockIcon className="w-5 h-5" />}
-                  label="Timeline"
-                  isActive={activePanel === "timeline"}
-                  onClick={() => setActivePanel("timeline")}
-                />
-                <ActivityButton
-                  icon={<SparkleIcon className="w-5 h-5" />}
-                  label="AI Agent"
-                  isActive={activePanel === "agent"}
-                  onClick={() => setActivePanel("agent")}
-                />
-                <div className="flex-1" />
-                <ActivityButton
-                  icon={<TerminalIcon className="w-5 h-5" />}
-                  label="Terminal"
-                  isActive={bottomPanelOpen}
-                  onClick={() => setBottomPanelOpen(!bottomPanelOpen)}
-                />
-                <ActivityButton
-                  icon={<ExtensionsIcon className="w-5 h-5" />}
-                  label="Extensions"
-                  isActive={activePanel === "extensions"}
-                  onClick={() => setActivePanel("extensions")}
-                />
-              </nav>
-            )}
+            {rootPath ? (
+              <ResizableGroup id="root-layout" orientation="horizontal" className="flex-1">
+                {/* Activity Bar + Sidebar */}
+                {isSidebarOpen && (
+                  <>
+                    <Panel id="activity-bar" defaultSize={3} minSize={3} maxSize={3} className="flex">
+                      <nav className="w-full border-r border-sidebar-border bg-activity-bar flex flex-col items-center py-2 gap-1" role="navigation" aria-label="Activity Bar">
+                        <ActivityButton
+                          icon={<FolderIcon className="w-5 h-5" />}
+                          label="Explorer"
+                          isActive={activePanel === "explorer"}
+                          onClick={() => setActivePanel("explorer")}
+                        />
+                        <ActivityButton
+                          icon={<SourceControlIcon className="w-5 h-5" />}
+                          label="Source Control"
+                          isActive={activePanel === "source-control"}
+                          onClick={() => setActivePanel("source-control")}
+                        />
+                        <ActivityButton
+                          icon={<BugIcon className="w-5 h-5" />}
+                          label="Run & Debug"
+                          isActive={activePanel === "debug"}
+                          onClick={() => setActivePanel("debug")}
+                        />
+                        <ActivityButton
+                          icon={<AlertIcon className="w-5 h-5" />}
+                          label="Problems"
+                          isActive={activePanel === "problems"}
+                          onClick={() => setActivePanel("problems")}
+                        />
+                        <ActivityButton
+                          icon={<ClockIcon className="w-5 h-5" />}
+                          label="Timeline"
+                          isActive={activePanel === "timeline"}
+                          onClick={() => setActivePanel("timeline")}
+                        />
+                        <ActivityButton
+                          icon={<SparkleIcon className="w-5 h-5" />}
+                          label="AI Agent"
+                          isActive={activePanel === "agent"}
+                          onClick={() => setActivePanel("agent")}
+                        />
+                        <div className="flex-1" />
+                        <ActivityButton
+                          icon={<TerminalIcon className="w-5 h-5" />}
+                          label="Terminal"
+                          isActive={bottomPanelOpen}
+                          onClick={() => setBottomPanelOpen(!bottomPanelOpen)}
+                        />
+                        <ActivityButton
+                          icon={<ExtensionsIcon className="w-5 h-5" />}
+                          label="Extensions"
+                          isActive={activePanel === "extensions"}
+                          onClick={() => setActivePanel("extensions")}
+                        />
+                      </nav>
+                    </Panel>
 
-            {/* Sidebar Panel */}
-            {isSidebarOpen && rootPath && (
-              <aside className="w-64 border-r border-sidebar-border bg-sidebar flex flex-col" role="complementary" aria-label="Sidebar Panel">
-                <ScrollArea className="flex-1">
-                  {activePanel === "explorer" && <FileTree />}
-                  {activePanel === "source-control" && <SourceControl />}
-                  {activePanel === "timeline" && <Timeline />}
-                  {activePanel === "agent" && <AgentPanel />}
-                  {activePanel === "debug" && (
-                    <DebugPanel
-                      onBreakpointToggle={(path, line) => {
-                        const existing = dapStore.breakpoints.get(path) ?? [];
-                        const exists = existing.some(bp => bp.line === line);
-                        if (exists) {
-                          const filtered = existing.filter(bp => bp.line !== line);
-                          dapStore.setBreakpoints(path, filtered);
-                        } else {
-                          dapStore.setBreakpoints(path, [...existing, { line, verified: false }]);
-                        }
-                      }}
-                      breakpoints={dapStore.breakpoints}
-                    />
-                  )}
-                  {activePanel === "problems" && (
-                    <ProblemPanel
-                      diagnostics={lspStore.diagnostics}
-                      onDiagnosticClick={(diagnostic) => {
-                        console.log("Diagnostic clicked:", diagnostic);
-                      }}
-                    />
-                  )}
-                  {activePanel === "extensions" && (
-                    <Suspense fallback={<div className="p-4 text-muted-foreground text-sm">Loading extensions...</div>}>
-                      <ExtensionPanel />
-                    </Suspense>
-                  )}
-                </ScrollArea>
-              </aside>
-            )}
+                    <Separator className="w-px bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
 
-            {/* Editor Area */}
-            <div className="flex-1 flex flex-col min-w-0">
-              {rootPath ? (
-                <div className="flex flex-col h-full flex-1">
-                  <div className={cn("flex flex-col h-full", bottomPanelOpen ? "h-[70%]" : "h-full")}>
-                    <TabBar />
-                    <Breadcrumbs />
-                    <div className="flex-1 overflow-hidden">
-                      <EditorPanel />
-                    </div>
-                  </div>
-                  {bottomPanelOpen && (
-                    <>
-                      <div className="h-1 bg-border cursor-row-resize" />
-                      <div className="h-64">
-                        <TerminalPanel />
+                    <Panel id="sidebar" defaultSize={17} minSize={12} maxSize={40} collapsible collapsedSize={0}>
+                      <aside className="h-full border-r border-sidebar-border bg-sidebar flex flex-col" role="complementary" aria-label="Sidebar Panel">
+                        <ScrollArea className="flex-1">
+                          {activePanel === "explorer" && <FileTree />}
+                          {activePanel === "source-control" && <SourceControl />}
+                          {activePanel === "timeline" && <Timeline />}
+                          {activePanel === "agent" && <AgentPanel />}
+                          {activePanel === "debug" && (
+                            <DebugPanel
+                              onBreakpointToggle={(path, line) => {
+                                const existing = dapStore.breakpoints.get(path) ?? [];
+                                const exists = existing.some(bp => bp.line === line);
+                                if (exists) {
+                                  const filtered = existing.filter(bp => bp.line !== line);
+                                  dapStore.setBreakpoints(path, filtered);
+                                } else {
+                                  dapStore.setBreakpoints(path, [...existing, { line, verified: false }]);
+                                }
+                              }}
+                              breakpoints={dapStore.breakpoints}
+                            />
+                          )}
+                          {activePanel === "problems" && (
+                            <ProblemPanel
+                              diagnostics={lspStore.diagnostics}
+                              onDiagnosticClick={(diagnostic) => {
+                                console.log("Diagnostic clicked:", diagnostic);
+                              }}
+                            />
+                          )}
+                          {activePanel === "extensions" && (
+                            <Suspense fallback={<div className="p-4 text-muted-foreground text-sm">Loading extensions...</div>}>
+                              <ExtensionPanel />
+                            </Suspense>
+                          )}
+                        </ScrollArea>
+                      </aside>
+                    </Panel>
+
+                    <Separator className="w-px bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
+                  </>
+                )}
+
+                {/* Main content area */}
+                <Panel id="main-content" defaultSize={isSidebarOpen ? 80 : 100}>
+                  <ResizableGroup id="editor-panel-group" orientation="vertical">
+                    {/* Editor area */}
+                    <Panel id="editor-area" defaultSize={bottomPanelOpen ? 70 : 100} minSize={30}>
+                      <div className="flex flex-col h-full">
+                        <TabBar />
+                        <Breadcrumbs />
+                        <div className="flex-1 overflow-hidden">
+                          <EditorPanel />
+                        </div>
                       </div>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <Button onClick={() => setShowOpenDialog(true)} size="lg">
-                    Open Folder
-                  </Button>
-                </div>
-              )}
-            </div>
+                    </Panel>
+
+                    {bottomPanelOpen && (
+                      <>
+                        <Separator className="h-px bg-border hover:bg-primary/50 transition-colors cursor-row-resize" />
+
+                        {/* Bottom panels */}
+                        <Panel id="bottom-panel" defaultSize={30} minSize={15} maxSize={60} collapsible collapsedSize={0}>
+                          <TerminalPanel />
+                        </Panel>
+                      </>
+                    )}
+                  </ResizableGroup>
+                </Panel>
+              </ResizableGroup>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <Button onClick={() => setShowOpenDialog(true)} size="lg">
+                  Open Folder
+                </Button>
+              </div>
+            )}
           </main>
 
           {/* Status Bar */}
